@@ -172,3 +172,13 @@ body {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
+
+/* Splash screen loading animation */
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
