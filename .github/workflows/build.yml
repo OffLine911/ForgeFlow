@@ -161,7 +161,11 @@ jobs:
         run: |
           mkdir -p release
           
-          # Windows amd64
+          echo "=== Listing all artifacts ==="
+          ls -la artifacts/
+          
+          echo "=== Windows amd64 ==="
+          ls -la artifacts/ForgeFlow-windows-amd64/ || true
           if [ -f artifacts/ForgeFlow-windows-amd64/ForgeFlow-v${{ steps.version.outputs.version }}-windows-amd64.exe ]; then
             cp artifacts/ForgeFlow-windows-amd64/ForgeFlow-v${{ steps.version.outputs.version }}-windows-amd64.exe release/
           fi
@@ -169,7 +173,8 @@ jobs:
             cp artifacts/ForgeFlow-windows-amd64/ForgeFlow-v${{ steps.version.outputs.version }}-windows-amd64-installer.exe release/
           fi
           
-          # Windows arm64
+          echo "=== Windows arm64 ==="
+          ls -la artifacts/ForgeFlow-windows-arm64/ || true
           if [ -f artifacts/ForgeFlow-windows-arm64/ForgeFlow-v${{ steps.version.outputs.version }}-windows-arm64.exe ]; then
             cp artifacts/ForgeFlow-windows-arm64/ForgeFlow-v${{ steps.version.outputs.version }}-windows-arm64.exe release/
           fi
@@ -177,27 +182,31 @@ jobs:
             cp artifacts/ForgeFlow-windows-arm64/ForgeFlow-v${{ steps.version.outputs.version }}-windows-arm64-installer.exe release/
           fi
           
-          # macOS amd64 (Intel)
-          if [ -d artifacts/ForgeFlow-macos-amd64/ForgeFlow-v${{ steps.version.outputs.version }}-macos-amd64.app ]; then
+          echo "=== macOS amd64 ==="
+          ls -la artifacts/ForgeFlow-macos-amd64/ || true
+          if [ -d "artifacts/ForgeFlow-macos-amd64/ForgeFlow-v${{ steps.version.outputs.version }}-macos-amd64.app" ]; then
             cd artifacts/ForgeFlow-macos-amd64
             zip -r ../../release/ForgeFlow-v${{ steps.version.outputs.version }}-macos-amd64.zip ForgeFlow-v${{ steps.version.outputs.version }}-macos-amd64.app
             cd ../..
           fi
           
-          # macOS arm64 (Apple Silicon)
-          if [ -d artifacts/ForgeFlow-macos-arm64/ForgeFlow-v${{ steps.version.outputs.version }}-macos-arm64.app ]; then
+          echo "=== macOS arm64 ==="
+          ls -la artifacts/ForgeFlow-macos-arm64/ || true
+          if [ -d "artifacts/ForgeFlow-macos-arm64/ForgeFlow-v${{ steps.version.outputs.version }}-macos-arm64.app" ]; then
             cd artifacts/ForgeFlow-macos-arm64
             zip -r ../../release/ForgeFlow-v${{ steps.version.outputs.version }}-macos-arm64.zip ForgeFlow-v${{ steps.version.outputs.version }}-macos-arm64.app
             cd ../..
           fi
           
-          # Linux amd64
+          echo "=== Linux amd64 ==="
+          ls -la artifacts/ForgeFlow-linux-amd64/ || true
           if [ -f artifacts/ForgeFlow-linux-amd64/ForgeFlow-v${{ steps.version.outputs.version }}-linux-amd64 ]; then
             cp artifacts/ForgeFlow-linux-amd64/ForgeFlow-v${{ steps.version.outputs.version }}-linux-amd64 release/
             chmod +x release/ForgeFlow-v${{ steps.version.outputs.version }}-linux-amd64
           fi
           
-          ls -la release/
+          echo "=== Final release files ==="
+          ls -lah release/
 
       - name: Generate checksums
         run: |
