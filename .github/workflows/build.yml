@@ -184,7 +184,12 @@ jobs:
           
           echo "=== macOS amd64 ==="
           ls -la artifacts/ForgeFlow-macos-amd64/ || true
-          if [ -d "artifacts/ForgeFlow-macos-amd64/ForgeFlow-v${{ steps.version.outputs.version }}-macos-amd64.app" ]; then
+          if [ -d "artifacts/ForgeFlow-macos-amd64/Contents" ]; then
+            # The .app was extracted, need to recreate it
+            cd artifacts/ForgeFlow-macos-amd64
+            zip -r ../../release/ForgeFlow-v${{ steps.version.outputs.version }}-macos-amd64.zip Contents
+            cd ../..
+          elif [ -d "artifacts/ForgeFlow-macos-amd64/ForgeFlow-v${{ steps.version.outputs.version }}-macos-amd64.app" ]; then
             cd artifacts/ForgeFlow-macos-amd64
             zip -r ../../release/ForgeFlow-v${{ steps.version.outputs.version }}-macos-amd64.zip ForgeFlow-v${{ steps.version.outputs.version }}-macos-amd64.app
             cd ../..
@@ -192,7 +197,12 @@ jobs:
           
           echo "=== macOS arm64 ==="
           ls -la artifacts/ForgeFlow-macos-arm64/ || true
-          if [ -d "artifacts/ForgeFlow-macos-arm64/ForgeFlow-v${{ steps.version.outputs.version }}-macos-arm64.app" ]; then
+          if [ -d "artifacts/ForgeFlow-macos-arm64/Contents" ]; then
+            # The .app was extracted, need to recreate it
+            cd artifacts/ForgeFlow-macos-arm64
+            zip -r ../../release/ForgeFlow-v${{ steps.version.outputs.version }}-macos-arm64.zip Contents
+            cd ../..
+          elif [ -d "artifacts/ForgeFlow-macos-arm64/ForgeFlow-v${{ steps.version.outputs.version }}-macos-arm64.app" ]; then
             cd artifacts/ForgeFlow-macos-arm64
             zip -r ../../release/ForgeFlow-v${{ steps.version.outputs.version }}-macos-arm64.zip ForgeFlow-v${{ steps.version.outputs.version }}-macos-arm64.app
             cd ../..
