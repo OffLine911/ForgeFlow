@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { AppSettings } from '@/types/settings';
 import { defaultSettings } from '@/types/settings';
 import { SaveSettings, LoadSettings } from '../../wailsjs/go/main/Storage';
+import { toast } from '@/stores/dialogStore';
 
 interface SettingsState {
   settings: AppSettings;
@@ -30,6 +31,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
       get().applyTheme();
     } catch (error) {
       console.error('Failed to load settings:', error);
+      toast.warning('Settings load failed', 'Using default settings');
       set({ settings: defaultSettings });
     } finally {
       set({ isLoading: false });
@@ -41,8 +43,10 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
     try {
       await SaveSettings(JSON.stringify(settings));
       set({ isDirty: false });
+      toast.success('Settings saved');
     } catch (error) {
       console.error('Failed to save settings:', error);
+      toast.error('Failed to save settings', error instanceof Error ? error.message : 'Unknown error');
       throw error;
     }
   },

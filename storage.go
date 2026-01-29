@@ -217,8 +217,31 @@ func (s *Storage) ListExecutions(limit int) ([]map[string]interface{}, error) {
 			continue
 		}
 
-		// Don't need full results in list
-		delete(execution, "results")
+		// Calculate summary stats from results before removing them
+		if results, ok := execution["results"].([]interface{}); ok {
+			nodeCount := len(results)
+			successCount := 0
+			errorCount := 0
+			
+			for _, r := range results {
+				if result, ok := r.(map[string]interface{}); ok {
+					if status, ok := result["status"].(string); ok {
+						if status == "success" {
+							successCount++
+						} else if status == "error" {
+							errorCount++
+						}
+					}
+				}
+			}
+			
+			execution["nodeCount"] = nodeCount
+			execution["successCount"] = successCount
+			execution["errorCount"] = errorCount
+			
+			// Remove full results to reduce payload size
+			delete(execution, "results")
+		}
 
 		executions = append(executions, execution)
 	}

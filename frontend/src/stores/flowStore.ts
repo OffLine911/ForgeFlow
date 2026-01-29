@@ -7,6 +7,7 @@ import { SaveFlow, LoadFlow, ListFlows, DeleteFlow, SaveExecution } from "../../
 import { WorkflowExecutor } from "@/executor/WorkflowExecutor";
 import type { NodeResult } from "@/executor/WorkflowExecutor";
 import type { LogLevel } from "@/handlers/types";
+import { toast } from "@/stores/dialogStore";
 
 interface HistoryEntry {
   nodes: FlowNode[];
@@ -258,6 +259,7 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
           set({ flows });
         } catch (error) {
           console.error('Failed to load flows:', error);
+          toast.error('Failed to load flows', error instanceof Error ? error.message : 'Unknown error');
           set({ flows: [] });
         } finally {
           set({ isLoadingFlows: false });
@@ -348,11 +350,15 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
             await TriggerService.registerWorkflowTriggers(flowId, nodes);
           } catch (error) {
             console.error('Failed to register triggers:', error);
+            toast.warning('Trigger registration failed', 'Some triggers may not work');
             addLog('⚠️  Warning: Failed to register triggers');
           }
+          
+          toast.success('Flow saved', `"${name}" saved successfully`);
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           addLog(`❌ Failed to save flow: ${errorMsg}`);
+          toast.error('Failed to save flow', errorMsg);
           console.error('Failed to save flow:', error);
           throw error;
         }
@@ -379,6 +385,7 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           addLog(`❌ Failed to load flow: ${errorMsg}`);
+          toast.error('Failed to load flow', errorMsg);
           console.error('Failed to load flow:', error);
           throw error;
         }
@@ -404,6 +411,7 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
           addLog(`🗑️  Deleting flow: ${flowName}`);
           await DeleteFlow(flowId);
           addLog(`✅ Flow deleted successfully`);
+          toast.success('Flow deleted', `"${flowName}" has been removed`);
           
           set({
             flows: flows.filter((f) => f.id !== flowId),
@@ -412,6 +420,7 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           addLog(`❌ Failed to delete flow: ${errorMsg}`);
+          toast.error('Failed to delete flow', errorMsg);
           console.error('Failed to delete flow:', error);
           throw error;
         }

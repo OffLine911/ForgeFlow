@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { useFlowStore } from '@/stores/flowStore';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import { useDialogStore } from '@/stores/dialogStore';
-import { useContextMenu } from '@/hooks';
+import { useContextMenu, useDialog } from '@/hooks';
 import type { Flow } from '@/types/flow';
 
 export default function WorkflowsPanel() {
@@ -23,6 +23,7 @@ export default function WorkflowsPanel() {
   const { flows, activeFlowId, loadFlow, deleteFlow, clearCanvas, saveFlow } = useFlowStore();
   const { confirm } = useDialogStore();
   const { showContextMenu } = useContextMenu();
+  const { showDialog } = useDialog();
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredFlowId, setHoveredFlowId] = useState<string | null>(null);
 
@@ -48,7 +49,11 @@ export default function WorkflowsPanel() {
       setWorkflowPanelOpen(false);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to load flow';
-      alert(`Error: ${errorMsg}`);
+      showDialog({
+        title: 'Error Loading Workflow',
+        content: <p className="text-sm text-muted-foreground">{errorMsg}</p>,
+        size: 'sm',
+      });
     }
   };
 
@@ -66,7 +71,11 @@ export default function WorkflowsPanel() {
         await deleteFlow(flow.id);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Failed to delete flow';
-        alert(`Error: ${errorMsg}`);
+        showDialog({
+          title: 'Error Deleting Workflow',
+          content: <p className="text-sm text-muted-foreground">{errorMsg}</p>,
+          size: 'sm',
+        });
       }
     }
   };
@@ -77,7 +86,11 @@ export default function WorkflowsPanel() {
       await saveFlow(`${flow.name} (Copy)`, flow.description);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to duplicate flow';
-      alert(`Error: ${errorMsg}`);
+      showDialog({
+        title: 'Error Duplicating Workflow',
+        content: <p className="text-sm text-muted-foreground">{errorMsg}</p>,
+        size: 'sm',
+      });
     }
   };
 
@@ -99,17 +112,42 @@ export default function WorkflowsPanel() {
         id: 'rename',
         label: 'Rename',
         icon: <Edit2 className="w-4 h-4" />,
-        onClick: async () => {
-          const newName = prompt('Enter new name:', flow.name);
-          if (newName && newName !== flow.name) {
-            try {
-              await loadFlow(flow.id);
-              await saveFlow(newName, flow.description);
-            } catch (error) {
-              const errorMsg = error instanceof Error ? error.message : 'Failed to rename flow';
-              alert(`Error: ${errorMsg}`);
-            }
-          }
+        onClick: () => {
+          showDialog({
+            title: 'Rename Workflow',
+            content: (
+              <div className="space-y-4">
+                <input
+                  id="rename-input"
+                  type="text"
+                  defaultValue={flow.name}
+                  placeholder="Workflow name"
+                  className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter') {
+                      const newName = (e.target as HTMLInputElement).value.trim();
+                      if (newName && newName !== flow.name) {
+                        try {
+                          await loadFlow(flow.id);
+                          await saveFlow(newName, flow.description);
+                        } catch (error) {
+                          const errorMsg = error instanceof Error ? error.message : 'Failed to rename flow';
+                          showDialog({
+                            title: 'Error Renaming Workflow',
+                            content: <p className="text-sm text-muted-foreground">{errorMsg}</p>,
+                            size: 'sm',
+                          });
+                        }
+                      }
+                    }
+                  }}
+                  autoFocus
+                />
+                <p className="text-xs text-muted-foreground">Press Enter to save</p>
+              </div>
+            ),
+            size: 'sm',
+          });
         },
       },
       { id: 'sep1', label: '', separator: true },

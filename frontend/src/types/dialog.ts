@@ -33,3 +33,25 @@ export interface ContextMenuOptions {
   items: ContextMenuItem[];
   position: { x: number; y: number };
 }
+
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+export interface Toast {
+  id: string;
+  type: ToastType;
+  title: string;
+  message?: string;
+  duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+}
+
+export interface AlertDialogOptions {
+  title: string;
+  message: string;
+  type?: 'info' | 'warning' | 'error' | 'success';
+  buttonText?: string;
+  onClose?: () => void;
+}

@@ -14,6 +14,7 @@ import { DialogProvider } from "@/components/ui";
 import { useFlowStore } from "@/stores/flowStore";
 import { useWorkflowStore } from "@/stores/workflowStore";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { toast } from "@/stores/dialogStore";
 import { useEffect, useState } from "react";
 
 function SplashScreen() {
@@ -82,9 +83,10 @@ export default function App() {
       try {
         await loadSettings();
         applyTheme();
-        await loadFlows(); // Load flows from backend
+        await loadFlows();
       } catch (error) {
         console.error("Failed to initialize app:", error);
+        toast.error("Initialization failed", "Some features may not work correctly");
       } finally {
         setIsLoading(false);
       }

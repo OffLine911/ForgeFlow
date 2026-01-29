@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { FlowExecution } from "@/types/flow";
 import { ListExecutions, DeleteExecution, SaveExecution } from "../../wailsjs/go/main/Storage";
+import { toast } from "@/stores/dialogStore";
 
 interface ExecutionState {
   executions: FlowExecution[];
@@ -24,22 +25,18 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
     try {
       const executions = await ListExecutions(100);
       
-      const processedExecutions = executions.map((exec: any) => {
-        const successCount = exec.results?.filter((r: any) => r.status === "success").length || 0;
-        const errorCount = exec.results?.filter((r: any) => r.status === "error").length || 0;
-        const nodeCount = exec.results?.length || 0;
-        
-        return {
-          ...exec,
-          nodeCount,
-          successCount,
-          errorCount,
-        } as FlowExecution;
-      });
+      // Backend now provides nodeCount, successCount, errorCount
+      const processedExecutions = executions.map((exec: any) => ({
+        ...exec,
+        nodeCount: exec.nodeCount || 0,
+        successCount: exec.successCount || 0,
+        errorCount: exec.errorCount || 0,
+      } as FlowExecution));
       
       set({ executions: processedExecutions, isLoading: false });
     } catch (error) {
       console.error("Failed to load executions:", error);
+      toast.error("Failed to load executions");
       set({ isLoading: false });
     }
   },
@@ -50,6 +47,7 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
       await get().loadExecutions();
     } catch (error) {
       console.error("Failed to save execution:", error);
+      toast.error("Failed to save execution");
     }
   },
 
@@ -57,8 +55,10 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
     try {
       await DeleteExecution(execId);
       set({ executions: get().executions.filter(e => e.id !== execId) });
+      toast.success("Execution deleted");
     } catch (error) {
       console.error("Failed to delete execution:", error);
+      toast.error("Failed to delete execution");
     }
   },
 
@@ -67,8 +67,10 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
     try {
       await Promise.all(executions.map(e => DeleteExecution(e.id)));
       set({ executions: [] });
+      toast.success("All executions cleared");
     } catch (error) {
       console.error("Failed to clear executions:", error);
+      toast.error("Failed to clear executions");
     }
   },
 

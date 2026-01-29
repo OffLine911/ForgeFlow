@@ -7,6 +7,7 @@ import { workflowTemplates, getTemplatesByCategory } from '@/data/templates';
 import type { WorkflowTemplate } from '@/types/template';
 import type { FlowNode, FlowEdge, NodeData } from '@/types/flow';
 import { nodeDefinitions } from '@/nodes';
+import { toast } from '@/stores/dialogStore';
 
 export default function TemplatesModal() {
   const { templateModalOpen, setTemplateModalOpen, setWorkflowPanelOpen } = useWorkflowStore();
@@ -104,8 +105,10 @@ export default function TemplatesModal() {
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
       await saveFlow(selectedTemplate.name, selectedTemplate.description);
+      toast.success('Template loaded', `"${selectedTemplate.name}" created successfully`);
     } catch (error) {
       console.error('Failed to save template:', error);
+      toast.error('Failed to create from template', error instanceof Error ? error.message : 'Unknown error');
     }
 
     handleClose();

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { X, Clock, CheckCircle2, XCircle, Trash2, Download } from "lucide-react";
 import { useExecutionStore } from "@/stores/executionStore";
+import { useConfirm } from "@/hooks";
 import type { FlowExecution } from "@/types/flow";
 
 interface ExecutionHistoryProps {
@@ -9,6 +10,7 @@ interface ExecutionHistoryProps {
 
 export default function ExecutionHistory({ onClose }: ExecutionHistoryProps) {
   const { executions, selectedExecution, isLoading, loadExecutions, deleteExecution, clearExecutions, setSelectedExecution } = useExecutionStore();
+  const { confirm } = useConfirm();
 
   useEffect(() => {
     loadExecutions();
@@ -73,8 +75,15 @@ export default function ExecutionHistory({ onClose }: ExecutionHistoryProps) {
           <div className="flex items-center gap-2">
             {executions.length > 0 && (
               <button
-                onClick={() => {
-                  if (confirm("Clear all execution history?")) {
+                onClick={async () => {
+                  const confirmed = await confirm({
+                    title: "Clear All History",
+                    message: "Are you sure you want to clear all execution history? This cannot be undone.",
+                    confirmText: "Clear All",
+                    cancelText: "Cancel",
+                    variant: "danger",
+                  });
+                  if (confirmed) {
                     clearExecutions();
                   }
                 }}
@@ -168,8 +177,15 @@ export default function ExecutionHistory({ onClose }: ExecutionHistoryProps) {
                       <Download className="w-4 h-4 text-[#d4d4d4]" />
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm("Delete this execution?")) {
+                      onClick={async () => {
+                        const confirmed = await confirm({
+                          title: "Delete Execution",
+                          message: "Are you sure you want to delete this execution?",
+                          confirmText: "Delete",
+                          cancelText: "Cancel",
+                          variant: "danger",
+                        });
+                        if (confirmed) {
                           deleteExecution(selectedExecution.id);
                           setSelectedExecution(null);
                         }
