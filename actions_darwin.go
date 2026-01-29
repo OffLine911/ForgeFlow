@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
 )
@@ -21,7 +22,7 @@ func (as *ActionService) OpenURL(url string) error {
 
 func (as *ActionService) SetClipboard(content string) error {
 	cmd := exec.Command("pbcopy")
-	cmd.Stdin = exec.Command("echo", "-n", content).Stdout
+	cmd.Stdin = bytes.NewBufferString(content)
 	return cmd.Run()
 }
 

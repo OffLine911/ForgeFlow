@@ -4,7 +4,7 @@
 package main
 
 import (
-	"fmt"
+	"bytes"
 	"os/exec"
 )
 
@@ -22,12 +22,12 @@ func (as *ActionService) OpenURL(url string) error {
 func (as *ActionService) SetClipboard(content string) error {
 	// Try xclip first, then xsel as fallback
 	cmd := exec.Command("xclip", "-selection", "clipboard")
-	cmd.Stdin = exec.Command("echo", "-n", content).Stdout
+	cmd.Stdin = bytes.NewBufferString(content)
 	err := cmd.Run()
 	if err != nil {
 		// Fallback to xsel
 		cmd = exec.Command("xsel", "--clipboard", "--input")
-		cmd.Stdin = exec.Command("echo", "-n", content).Stdout
+		cmd.Stdin = bytes.NewBufferString(content)
 		return cmd.Run()
 	}
 	return nil
