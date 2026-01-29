@@ -94,4 +94,85 @@ export const loopNodes: NodeDefinition[] = [
       },
     ],
   },
+  {
+    type: 'loop_parallel',
+    category: 'loop',
+    name: 'Parallel For Each',
+    icon: '⚡',
+    color: '#a855f7',
+    description: 'Process array items in parallel (concurrent)',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [
+      { id: 'loop', type: 'output', label: 'Each Item' },
+      { id: 'done', type: 'output', label: 'All Done' },
+    ],
+    defaultData: { array: '', itemVar: 'item', concurrency: 5 },
+    fields: [
+      { 
+        key: 'array', 
+        label: 'Array', 
+        type: 'text', 
+        placeholder: '{{items}} or [1,2,3]', 
+        required: true 
+      },
+      { 
+        key: 'concurrency', 
+        label: 'Max Parallel', 
+        type: 'select',
+        options: [
+          { value: '2', label: '2 concurrent' },
+          { value: '5', label: '5 concurrent' },
+          { value: '10', label: '10 concurrent' },
+          { value: '20', label: '20 concurrent' },
+        ]
+      },
+      { 
+        key: 'itemVar', 
+        label: 'Item Variable', 
+        type: 'text', 
+        placeholder: 'item' 
+      },
+    ],
+  },
+  {
+    type: 'loop_rate_limited',
+    category: 'loop',
+    name: 'Rate Limited Loop',
+    icon: '🕐',
+    color: '#a855f7',
+    description: 'Loop with delay between iterations (API-friendly)',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [
+      { id: 'loop', type: 'output', label: 'Each Item' },
+      { id: 'done', type: 'output', label: 'Done' },
+    ],
+    defaultData: { array: '', itemVar: 'item', delayMs: 1000 },
+    fields: [
+      { 
+        key: 'array', 
+        label: 'Array', 
+        type: 'text', 
+        placeholder: '{{items}} or [1,2,3]', 
+        required: true 
+      },
+      { 
+        key: 'delayMs', 
+        label: 'Delay Between Items', 
+        type: 'select',
+        options: [
+          { value: '100', label: '100ms (fast)' },
+          { value: '500', label: '500ms' },
+          { value: '1000', label: '1 second' },
+          { value: '2000', label: '2 seconds' },
+          { value: '5000', label: '5 seconds' },
+        ]
+      },
+      { 
+        key: 'itemVar', 
+        label: 'Item Variable', 
+        type: 'text', 
+        placeholder: 'item' 
+      },
+    ],
+  },
 ];

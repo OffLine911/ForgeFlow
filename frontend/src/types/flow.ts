@@ -30,6 +30,8 @@ export interface Flow {
 
 export interface ExecutionResult {
   nodeId: string;
+  nodeLabel?: string;
+  nodeType?: string;
   status: "idle" | "running" | "success" | "error";
   output?: unknown;
   error?: string;

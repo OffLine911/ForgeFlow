@@ -431,4 +431,186 @@ export const utilityNodes: NodeDefinition[] = [
       },
     ],
   },
+  {
+    type: 'util_hash',
+    category: 'utility',
+    name: 'Hash',
+    icon: '#️⃣',
+    color: '#64748b',
+    description: 'Generate cryptographic hashes (MD5, SHA)',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Hash' }],
+    defaultData: { algorithm: 'sha256', text: '', uppercase: false },
+    fields: [
+      { 
+        key: 'algorithm', 
+        label: 'Algorithm', 
+        type: 'select', 
+        options: [
+          { value: 'md5', label: 'MD5 (32 chars)' },
+          { value: 'sha1', label: 'SHA-1 (40 chars)' },
+          { value: 'sha256', label: 'SHA-256 (64 chars)' },
+          { value: 'sha512', label: 'SHA-512 (128 chars)' },
+        ]
+      },
+      { 
+        key: 'text', 
+        label: 'Text', 
+        type: 'textarea', 
+        placeholder: '{{output}}', 
+        required: true 
+      },
+      { 
+        key: 'uppercase', 
+        label: 'Uppercase', 
+        type: 'boolean', 
+        defaultValue: false 
+      },
+    ],
+  },
+  {
+    type: 'util_encrypt',
+    category: 'utility',
+    name: 'Encrypt/Decrypt',
+    icon: '🔒',
+    color: '#64748b',
+    description: 'AES encryption and decryption',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Result' }],
+    defaultData: { mode: 'encrypt', algorithm: 'aes-256', text: '', key: '' },
+    fields: [
+      { 
+        key: 'mode', 
+        label: 'Mode', 
+        type: 'select', 
+        options: [
+          { value: 'encrypt', label: 'Encrypt' },
+          { value: 'decrypt', label: 'Decrypt' },
+        ]
+      },
+      { 
+        key: 'algorithm', 
+        label: 'Algorithm', 
+        type: 'select', 
+        options: [
+          { value: 'aes-128', label: 'AES-128' },
+          { value: 'aes-256', label: 'AES-256' },
+        ]
+      },
+      { 
+        key: 'text', 
+        label: 'Text', 
+        type: 'textarea', 
+        placeholder: '{{output}}', 
+        required: true 
+      },
+      { 
+        key: 'key', 
+        label: 'Secret Key', 
+        type: 'password', 
+        placeholder: 'Your encryption key', 
+        required: true 
+      },
+    ],
+  },
+  {
+    type: 'util_wait_all',
+    category: 'utility',
+    name: 'Wait All',
+    icon: '⏸️',
+    color: '#64748b',
+    description: 'Wait for all inputs before continuing',
+    inputs: [
+      { id: 'in1', type: 'input', label: 'Input 1' },
+      { id: 'in2', type: 'input', label: 'Input 2' },
+      { id: 'in3', type: 'input', label: 'Input 3' },
+    ],
+    outputs: [{ id: 'out', type: 'output', label: 'All Done' }],
+    defaultData: { mode: 'all' },
+    fields: [
+      { 
+        key: 'mode', 
+        label: 'Wait Mode', 
+        type: 'select', 
+        options: [
+          { value: 'all', label: 'Wait for ALL inputs' },
+          { value: 'any', label: 'Wait for ANY input' },
+        ]
+      },
+    ],
+  },
+  {
+    type: 'util_switch',
+    category: 'utility',
+    name: 'Switch/Router',
+    icon: '🔀',
+    color: '#64748b',
+    description: 'Route data to different outputs based on value',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [
+      { id: 'case1', type: 'output', label: 'Case 1' },
+      { id: 'case2', type: 'output', label: 'Case 2' },
+      { id: 'case3', type: 'output', label: 'Case 3' },
+      { id: 'default', type: 'output', label: 'Default' },
+    ],
+    defaultData: { value: '', case1: '', case2: '', case3: '' },
+    fields: [
+      { 
+        key: 'value', 
+        label: 'Value to Check', 
+        type: 'text', 
+        placeholder: '{{output}}', 
+        required: true 
+      },
+      { 
+        key: 'case1', 
+        label: 'Case 1 Value', 
+        type: 'text', 
+        placeholder: 'Match value for Case 1' 
+      },
+      { 
+        key: 'case2', 
+        label: 'Case 2 Value', 
+        type: 'text', 
+        placeholder: 'Match value for Case 2' 
+      },
+      { 
+        key: 'case3', 
+        label: 'Case 3 Value', 
+        type: 'text', 
+        placeholder: 'Match value for Case 3' 
+      },
+    ],
+  },
+  {
+    type: 'util_debounce',
+    category: 'utility',
+    name: 'Debounce',
+    icon: '⏱️',
+    color: '#64748b',
+    description: 'Limit execution frequency (wait for quiet period)',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Output' }],
+    defaultData: { delay: 500, key: 'default' },
+    fields: [
+      { 
+        key: 'delay', 
+        label: 'Wait Time (ms)', 
+        type: 'select',
+        options: [
+          { value: '100', label: '100ms' },
+          { value: '250', label: '250ms' },
+          { value: '500', label: '500ms' },
+          { value: '1000', label: '1 second' },
+          { value: '2000', label: '2 seconds' },
+        ]
+      },
+      { 
+        key: 'key', 
+        label: 'Debounce Key', 
+        type: 'text', 
+        placeholder: 'Unique key for this debounce' 
+      },
+    ],
+  },
 ];

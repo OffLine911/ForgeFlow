@@ -613,6 +613,225 @@ export const appNodes: NodeDefinition[] = [
     ],
   },
 
+  // === AI IMAGE GENERATION ===
+  {
+    type: 'action_openai_image',
+    category: 'apps',
+    name: 'OpenAI Image (DALL-E)',
+    icon: '🎨',
+    color: '#10a37f',
+    description: 'Generate images with DALL-E',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Image URL' }],
+    defaultData: { apiKey: '', prompt: '', size: '1024x1024', model: 'dall-e-3', quality: 'standard', style: 'vivid' },
+    fields: [
+      { key: 'apiKey', label: 'OpenAI API Key', type: 'password', placeholder: 'sk-...', required: true },
+      { key: 'prompt', label: 'Image Description', type: 'textarea', placeholder: 'A futuristic city at sunset...', required: true },
+      { key: 'model', label: 'Model', type: 'select', options: [
+        { value: 'dall-e-3', label: 'DALL-E 3 (Best)' },
+        { value: 'dall-e-2', label: 'DALL-E 2 (Faster)' },
+      ]},
+      { key: 'size', label: 'Size', type: 'select', options: [
+        { value: '1024x1024', label: '1024x1024 (Square)' },
+        { value: '1792x1024', label: '1792x1024 (Landscape)' },
+        { value: '1024x1792', label: '1024x1792 (Portrait)' },
+      ]},
+      { key: 'quality', label: 'Quality', type: 'select', options: [
+        { value: 'standard', label: 'Standard' },
+        { value: 'hd', label: 'HD (More Detail)' },
+      ]},
+      { key: 'style', label: 'Style', type: 'select', options: [
+        { value: 'vivid', label: 'Vivid (Vibrant)' },
+        { value: 'natural', label: 'Natural (Realistic)' },
+      ]},
+    ],
+  },
+  {
+    type: 'action_stability_image',
+    category: 'apps',
+    name: 'Stable Diffusion',
+    icon: '🖼️',
+    color: '#9333ea',
+    description: 'Generate images with Stable Diffusion API',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Image' }],
+    defaultData: { apiKey: '', prompt: '', negativePrompt: '', size: '1024x1024', steps: 30 },
+    fields: [
+      { key: 'apiKey', label: 'Stability AI Key', type: 'password', placeholder: 'sk-...', required: true },
+      { key: 'prompt', label: 'Prompt', type: 'textarea', placeholder: 'A beautiful landscape...', required: true },
+      { key: 'negativePrompt', label: 'Negative Prompt', type: 'textarea', placeholder: 'blurry, low quality...' },
+      { key: 'size', label: 'Size', type: 'select', options: [
+        { value: '512x512', label: '512x512' },
+        { value: '1024x1024', label: '1024x1024' },
+      ]},
+      { key: 'steps', label: 'Steps', type: 'select', options: [
+        { value: '20', label: '20 (Fast)' },
+        { value: '30', label: '30 (Balanced)' },
+        { value: '50', label: '50 (Quality)' },
+      ]},
+    ],
+  },
+
+  // === YOUTUBE ===
+  {
+    type: 'action_youtube',
+    category: 'apps',
+    name: 'YouTube Search',
+    icon: '📺',
+    color: '#FF0000',
+    description: 'Search YouTube videos',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Videos' }],
+    defaultData: { apiKey: '', query: '', maxResults: 5, type: 'video' },
+    fields: [
+      { key: 'apiKey', label: 'YouTube API Key', type: 'password', placeholder: 'Your API key', required: true },
+      { key: 'query', label: 'Search Query', type: 'text', placeholder: '{{topic}} or keywords', required: true },
+      { key: 'maxResults', label: 'Max Results', type: 'select', options: [
+        { value: '5', label: '5 videos' },
+        { value: '10', label: '10 videos' },
+        { value: '25', label: '25 videos' },
+        { value: '50', label: '50 videos' },
+      ]},
+      { key: 'type', label: 'Type', type: 'select', options: [
+        { value: 'video', label: 'Videos' },
+        { value: 'channel', label: 'Channels' },
+        { value: 'playlist', label: 'Playlists' },
+      ]},
+    ],
+  },
+
+  // === GITHUB ===
+  {
+    type: 'action_github',
+    category: 'apps',
+    name: 'GitHub',
+    icon: '🐙',
+    color: '#24292e',
+    description: 'GitHub API operations',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Result' }],
+    defaultData: { token: '', action: 'list_repos', owner: '', repo: '', title: '', body: '', labels: '' },
+    fields: [
+      { key: 'token', label: 'GitHub Token', type: 'password', placeholder: 'ghp_...', required: true },
+      { key: 'action', label: 'Action', type: 'select', options: [
+        { value: 'list_repos', label: 'List Repositories' },
+        { value: 'list_issues', label: 'List Issues' },
+        { value: 'create_issue', label: 'Create Issue' },
+        { value: 'get_repo', label: 'Get Repository Info' },
+        { value: 'get_file', label: 'Get File Content' },
+      ]},
+      { key: 'owner', label: 'Owner/Org', type: 'text', placeholder: 'username or org' },
+      { key: 'repo', label: 'Repository', type: 'text', placeholder: 'repo-name' },
+      { key: 'path', label: 'File Path (for get_file)', type: 'text', placeholder: 'README.md' },
+      { key: 'title', label: 'Issue Title', type: 'text', placeholder: 'Bug report...' },
+      { key: 'body', label: 'Issue Body', type: 'textarea', placeholder: '{{output}}' },
+      { key: 'labels', label: 'Labels (comma-separated)', type: 'text', placeholder: 'bug, urgent' },
+    ],
+  },
+
+  // === NOTION ===
+  {
+    type: 'action_notion',
+    category: 'apps',
+    name: 'Notion',
+    icon: '📓',
+    color: '#000000',
+    description: 'Notion API operations',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Result' }],
+    defaultData: { apiKey: '', action: 'search', databaseId: '', query: '', properties: '' },
+    fields: [
+      { key: 'apiKey', label: 'Notion API Key', type: 'password', placeholder: 'secret_...', required: true },
+      { key: 'action', label: 'Action', type: 'select', options: [
+        { value: 'search', label: 'Search Pages' },
+        { value: 'query_database', label: 'Query Database' },
+        { value: 'create_page', label: 'Create Page' },
+        { value: 'get_page', label: 'Get Page' },
+      ]},
+      { key: 'databaseId', label: 'Database ID', type: 'text', placeholder: 'For database operations' },
+      { key: 'pageId', label: 'Page ID', type: 'text', placeholder: 'For get/update page' },
+      { key: 'query', label: 'Search Query', type: 'text', placeholder: 'Search term...' },
+      { key: 'properties', label: 'Properties (JSON)', type: 'textarea', placeholder: '{"Name": {"title": [{"text": {"content": "..."}}]}}' },
+    ],
+  },
+
+  // === SYSTEM ACTIONS ===
+  {
+    type: 'action_screenshot',
+    category: 'apps',
+    name: 'Screenshot',
+    icon: '📸',
+    color: '#6366f1',
+    description: 'Capture screenshot of screen or window',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Image Path' }],
+    defaultData: { savePath: '', display: '0', format: 'png' },
+    fields: [
+      { key: 'savePath', label: 'Save Path', type: 'file-save', placeholder: '/path/to/screenshot.png', required: true, fileTypes: ['.png', '.jpg'] },
+      { key: 'display', label: 'Display', type: 'select', options: [
+        { value: '0', label: 'Primary Display' },
+        { value: '1', label: 'Display 2' },
+        { value: '2', label: 'Display 3' },
+        { value: 'all', label: 'All Displays' },
+      ]},
+      { key: 'format', label: 'Format', type: 'select', options: [
+        { value: 'png', label: 'PNG' },
+        { value: 'jpg', label: 'JPEG' },
+      ]},
+    ],
+  },
+  {
+    type: 'action_play_sound',
+    category: 'apps',
+    name: 'Play Sound',
+    icon: '🔊',
+    color: '#22c55e',
+    description: 'Play a sound notification',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Done' }],
+    defaultData: { sound: 'beep', customPath: '' },
+    fields: [
+      { key: 'sound', label: 'Sound', type: 'select', options: [
+        { value: 'beep', label: 'Beep' },
+        { value: 'success', label: 'Success' },
+        { value: 'error', label: 'Error' },
+        { value: 'notification', label: 'Notification' },
+        { value: 'custom', label: 'Custom File' },
+      ]},
+      { key: 'customPath', label: 'Custom Sound File', type: 'file', placeholder: '/path/to/sound.mp3', fileTypes: ['.mp3', '.wav'] },
+    ],
+  },
+
+  // === TEXT TO SPEECH ===
+  {
+    type: 'action_tts',
+    category: 'apps',
+    name: 'Text to Speech',
+    icon: '🗣️',
+    color: '#8b5cf6',
+    description: 'Convert text to speech audio',
+    inputs: [{ id: 'in', type: 'input' }],
+    outputs: [{ id: 'out', type: 'output', label: 'Audio' }],
+    defaultData: { provider: 'openai', apiKey: '', text: '', voice: 'alloy', savePath: '' },
+    fields: [
+      { key: 'provider', label: 'Provider', type: 'select', options: [
+        { value: 'openai', label: 'OpenAI TTS' },
+        { value: 'elevenlabs', label: 'ElevenLabs' },
+      ]},
+      { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'sk-... or xi-...', required: true },
+      { key: 'text', label: 'Text', type: 'textarea', placeholder: '{{output}} or text to speak', required: true },
+      { key: 'voice', label: 'Voice', type: 'select', options: [
+        { value: 'alloy', label: 'Alloy (Neutral)' },
+        { value: 'echo', label: 'Echo (Male)' },
+        { value: 'fable', label: 'Fable (British)' },
+        { value: 'onyx', label: 'Onyx (Deep)' },
+        { value: 'nova', label: 'Nova (Female)' },
+        { value: 'shimmer', label: 'Shimmer (Soft)' },
+      ]},
+      { key: 'savePath', label: 'Save To (optional)', type: 'file-save', placeholder: '/path/to/audio.mp3', fileTypes: ['.mp3'] },
+    ],
+  },
+
   // === FORGEFLOW INTERNAL ===
   {
     type: 'app_settings_get',

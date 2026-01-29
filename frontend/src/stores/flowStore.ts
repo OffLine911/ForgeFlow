@@ -469,14 +469,19 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
             } as const;
             updateNodeData(result.nodeId, { status: statusMap[result.status] });
             
-            // Track result
+            // Track result with node label
             const existingIdx = executionResults.findIndex(r => r.nodeId === result.nodeId);
             const duration = result.endedAt && result.startedAt 
               ? result.endedAt - result.startedAt 
               : 0;
             
+            // Find the node to get its label
+            const node = nodes.find(n => n.id === result.nodeId);
+            
             const execResult = {
               nodeId: result.nodeId,
+              nodeLabel: node?.data.label || 'Unknown Node',
+              nodeType: node?.data.nodeType || node?.type || 'unknown',
               status: statusMap[result.status],
               output: result.output,
               error: result.error,

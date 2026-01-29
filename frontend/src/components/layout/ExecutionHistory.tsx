@@ -242,19 +242,24 @@ export default function ExecutionHistory({ onClose }: ExecutionHistoryProps) {
                         key={idx}
                         className="bg-[#1e1e1e] rounded p-3 border border-[#3e3e42]"
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
                             {getStatusIcon(result.status)}
-                            <span className="text-sm text-[#d4d4d4] font-mono">
-                              {result.nodeId.slice(0, 8)}
+                            <span className="text-sm text-[#d4d4d4] font-medium">
+                              {result.nodeLabel || result.nodeId.slice(0, 8)}
                             </span>
                           </div>
                           <span className="text-xs text-[#858585]">
                             {result.duration}ms
                           </span>
                         </div>
+                        {result.nodeType && (
+                          <div className="text-[10px] text-[#858585] font-mono ml-6 mb-1">
+                            {result.nodeType}
+                          </div>
+                        )}
                         {result.error && (
-                          <div className="text-xs text-red-400 mt-2 font-mono">
+                          <div className="text-xs text-red-400 mt-2 font-mono bg-red-500/10 p-2 rounded">
                             {result.error}
                           </div>
                         )}
