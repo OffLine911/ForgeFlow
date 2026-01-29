@@ -7,9 +7,10 @@ import {
   BackgroundVariant,
   ConnectionLineType,
   MarkerType,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Trash2, Network } from "lucide-react";
 import { useFlowStore } from "@/stores/flowStore";
 import FlowNode from "./FlowNode";
 import type { NodeData, FlowNode as FlowNodeType } from "@/types/flow";
@@ -25,9 +26,93 @@ const defaultEdgeOptions = {
   markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: "oklch(0.5 0.15 250)" },
 };
 
+// Simple auto-layout algorithm (hierarchical)
+function autoLayout(nodes: FlowNodeType[], edges: any[]) {
+  if (nodes.length === 0) return nodes;
+
+  // Build adjacency map
+  const adjacency = new Map<string, string[]>();
+  const inDegree = new Map<string, number>();
+  
+  nodes.forEach(node => {
+    adjacency.set(node.id, []);
+    inDegree.set(node.id, 0);
+  });
+  
+  edges.forEach(edge => {
+    adjacency.get(edge.source)?.push(edge.target);
+    inDegree.set(edge.target, (inDegree.get(edge.target) || 0) + 1);
+  });
+
+  // Find root nodes (no incoming edges)
+  const roots = nodes.filter(node => inDegree.get(node.id) === 0);
+  
+  // BFS to assign levels
+  const levels = new Map<string, number>();
+  const queue: Array<{ id: string; level: number }> = roots.map(n => ({ id: n.id, level: 0 }));
+  
+  while (queue.length > 0) {
+    const { id, level } = queue.shift()!;
+    levels.set(id, level);
+    
+    adjacency.get(id)?.forEach(targetId => {
+      const currentLevel = levels.get(targetId) || 0;
+      if (level + 1 > currentLevel) {
+        levels.set(targetId, level + 1);
+        queue.push({ id: targetId, level: level + 1 });
+      }
+    });
+  }
+
+  // Group nodes by level
+  const nodesByLevel = new Map<number, FlowNodeType[]>();
+  nodes.forEach(node => {
+    const level = levels.get(node.id) || 0;
+    if (!nodesByLevel.has(level)) {
+      nodesByLevel.set(level, []);
+    }
+    nodesByLevel.get(level)!.push(node);
+  });
+
+  // Position nodes
+  const horizontalSpacing = 300;
+  const verticalSpacing = 150;
+  const startX = 100;
+  const startY = 100;
+
+  return nodes.map(node => {
+    const level = levels.get(node.id) || 0;
+    const nodesInLevel = nodesByLevel.get(level) || [];
+    const indexInLevel = nodesInLevel.indexOf(node);
+    const totalInLevel = nodesInLevel.length;
+    
+    // Center nodes vertically within their level
+    const offsetY = (indexInLevel - (totalInLevel - 1) / 2) * verticalSpacing;
+    
+    return {
+      ...node,
+      position: {
+        x: startX + level * horizontalSpacing,
+        y: startY + offsetY,
+      },
+    };
+  });
+}
+
 export default function FlowCanvas() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, isRunning, setSelectedNodeId, logs, clearLogs } = useFlowStore();
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, isRunning, setSelectedNodeId, logs, clearLogs, setNodes } = useFlowStore();
+  const { fitView } = useReactFlow();
+
+  const handleAutoLayout = useCallback(() => {
+    const layoutedNodes = autoLayout(nodes, edges);
+    setNodes(layoutedNodes);
+    
+    // Fit view after layout with animation
+    setTimeout(() => {
+      fitView({ padding: 0.2, duration: 300 });
+    }, 50);
+  }, [nodes, edges, setNodes, fitView]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -118,7 +203,16 @@ export default function FlowCanvas() {
         <Controls 
           showInteractive={false}
           className="!bg-card !border-border !rounded-md !shadow-lg [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-foreground [&>button]:!w-7 [&>button]:!h-7" 
-        />
+        >
+          <button
+            onClick={handleAutoLayout}
+            disabled={nodes.length === 0}
+            className="react-flow__controls-button !bg-card !border-border !text-foreground hover:!bg-muted disabled:!opacity-30 disabled:!cursor-not-allowed"
+            title="Auto-layout workflow"
+          >
+            <Network className="w-4 h-4" />
+          </button>
+        </Controls>
         <MiniMap
           className="!bg-[#0d0d0d]/95 !border-2 !border-border !rounded-lg !shadow-xl"
           nodeColor={(node) => {

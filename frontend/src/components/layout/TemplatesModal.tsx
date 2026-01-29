@@ -10,7 +10,7 @@ import { nodeDefinitions } from '@/nodes';
 
 export default function TemplatesModal() {
   const { templateModalOpen, setTemplateModalOpen, setWorkflowPanelOpen } = useWorkflowStore();
-  const { setNodes, setEdges, saveFlow } = useFlowStore();
+  const { setNodes, setEdges, saveFlow, pushHistory } = useFlowStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<WorkflowTemplate | null>(null);
@@ -78,17 +78,32 @@ export default function TemplatesModal() {
     });
 
     // Convert template connections to FlowEdges
-    const edges: FlowEdge[] = selectedTemplate.connections.map((conn, index) => ({
-      id: `edge-${index}-${Date.now()}`,
-      source: nodes[conn.sourceIndex].id,
-      target: nodes[conn.targetIndex].id,
-      sourceHandle: conn.sourcePort,
-      targetHandle: conn.targetPort,
-    }));
+    const edges: FlowEdge[] = selectedTemplate.connections.map((conn, index) => {
+      const sourceNode = nodes[conn.sourceIndex];
+      const targetNode = nodes[conn.targetIndex];
+      
+      return {
+        id: `edge-${index}-${Date.now()}`,
+        source: sourceNode.id,
+        target: targetNode.id,
+        sourceHandle: conn.sourcePort || null,
+        targetHandle: conn.targetPort || null,
+        type: 'smoothstep',
+        animated: true,
+      };
+    });
 
+    console.log('Template nodes:', nodes);
+    console.log('Template edges:', edges);
+
+    pushHistory();
     setNodes(nodes);
     setEdges(edges);
-    saveFlow(selectedTemplate.name, selectedTemplate.description);
+    
+    // Save after a brief delay to ensure state is updated
+    setTimeout(() => {
+      saveFlow(selectedTemplate.name, selectedTemplate.description);
+    }, 100);
 
     handleClose();
     setWorkflowPanelOpen(false);

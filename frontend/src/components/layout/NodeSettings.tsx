@@ -1,5 +1,6 @@
 import { X, Settings } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { CronField, HotkeyField, FilePickerField } from "@/components/ui/fields";
 import { useFlowStore } from "@/stores/flowStore";
 import { cn } from "@/lib/utils";
 import type { NodeCategory } from "@/types/flow";
@@ -36,57 +37,58 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
   if (!selectedNode) return null;
 
   const { data } = selectedNode;
+  const config = (data.config || {}) as Record<string, any>;
   const hasSettings = ["trigger", "action", "ai", "condition"].includes(data.category);
 
   return (
-    <aside className="w-80 h-full bg-card border-l border-border flex flex-col">
+    <aside className="w-64 h-full bg-card border-l border-border flex flex-col text-xs">
       {/* Header */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Settings className="w-4 h-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold">Node Settings</h2>
+      <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <Settings className="w-3.5 h-3.5 text-muted-foreground" />
+          <h2 className="text-xs font-semibold">Settings</h2>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="w-4 h-4" />
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onClose}>
+          <X className="w-3.5 h-3.5" />
         </Button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {/* Node Info */}
         <div>
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Node Type
+          <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+            Type
           </label>
-          <div className={cn("mt-1.5 px-3 py-2 rounded-md border bg-background/50", categoryColors[data.category])}>
-            <span className="text-sm font-medium">{categoryLabels[data.category]}</span>
+          <div className={cn("mt-1 px-2 py-1.5 rounded border bg-background/50 text-xs", categoryColors[data.category])}>
+            <span className="font-medium">{categoryLabels[data.category]}</span>
           </div>
         </div>
 
         {/* Node Label */}
         <div>
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
             Label
           </label>
           <input
             type="text"
             value={data.label}
             onChange={(e) => updateNodeData(selectedNode.id, { label: e.target.value })}
-            className="mt-1.5 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
 
         {/* Description */}
         <div>
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
             Description
           </label>
           <textarea
             value={data.description || ""}
             onChange={(e) => updateNodeData(selectedNode.id, { description: e.target.value })}
-            rows={3}
-            className="mt-1.5 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-            placeholder="Optional description..."
+            rows={2}
+            className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+            placeholder="Optional..."
           />
         </div>
 
@@ -94,56 +96,69 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
         {hasSettings && (
           <>
             <div className="pt-2 border-t border-border">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 Configuration
               </h3>
 
               {/* Trigger Settings */}
               {data.category === "trigger" && (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {data.icon === "file" && (
                     <>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Watch Path</label>
-                        <input
-                          type="text"
-                          placeholder="/path/to/watch"
-                          className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <label className="text-[10px] font-medium text-muted-foreground">Watch Path</label>
+                        <div className="mt-1">
+                          <FilePickerField
+                            value={String(config.watchPath || "")}
+                            onChange={(value) => updateNodeData(selectedNode.id, { config: { ...config, watchPath: value } })}
+                            placeholder="/path/to/watch"
+                            mode="open"
+                          />
+                        </div>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">File Pattern</label>
+                        <label className="text-[10px] font-medium text-muted-foreground">File Pattern</label>
                         <input
                           type="text"
+                          value={String(config.filePattern || "")}
+                          onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, filePattern: e.target.value } })}
                           placeholder="*.txt"
-                          className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                          className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                       </div>
                     </>
                   )}
                   {data.icon === "time" && (
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground">Cron Expression</label>
-                      <input
-                        type="text"
-                        placeholder="0 */5 * * * *"
-                        className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
+                      <label className="text-[10px] font-medium text-muted-foreground">Cron Expression</label>
+                      <div className="mt-1">
+                        <CronField
+                          value={String(config.cron || "")}
+                          onChange={(value) => updateNodeData(selectedNode.id, { config: { ...config, cron: value } })}
+                          placeholder="0 */5 * * * *"
+                        />
+                      </div>
                     </div>
                   )}
                   {data.icon === "http" && (
                     <>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Endpoint Path</label>
+                        <label className="text-[10px] font-medium text-muted-foreground">Endpoint Path</label>
                         <input
                           type="text"
+                          value={String(config.endpoint || "")}
+                          onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, endpoint: e.target.value } })}
                           placeholder="/webhook"
-                          className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                          className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Method</label>
-                        <select className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <label className="text-[10px] font-medium text-muted-foreground">Method</label>
+                        <select 
+                          value={String(config.method || "POST")}
+                          onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, method: e.target.value } })}
+                          className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
                           <option>POST</option>
                           <option>GET</option>
                           <option>PUT</option>
@@ -151,62 +166,99 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
                         </select>
                       </div>
                     </>
+                  )}
+                  {data.icon === "keyboard" && (
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">Hotkey</label>
+                      <div className="mt-1">
+                        <HotkeyField
+                          value={String(config.hotkey || "")}
+                          onChange={(value) => updateNodeData(selectedNode.id, { config: { ...config, hotkey: value } })}
+                          placeholder="Click to record..."
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
 
               {/* Action Settings */}
               {data.category === "action" && (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {data.icon === "api" && (
                     <>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">URL</label>
+                        <label className="text-[10px] font-medium text-muted-foreground">URL</label>
                         <input
                           type="text"
+                          value={String(config.url || "")}
+                          onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, url: e.target.value } })}
                           placeholder="https://api.example.com"
-                          className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                          className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Method</label>
-                        <select className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <label className="text-[10px] font-medium text-muted-foreground">Method</label>
+                        <select 
+                          value={String(config.method || "GET")}
+                          onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, method: e.target.value } })}
+                          className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
                           <option>GET</option>
                           <option>POST</option>
                           <option>PUT</option>
                           <option>DELETE</option>
                         </select>
                       </div>
+                      <div>
+                        <label className="text-[10px] font-medium text-muted-foreground">Headers (JSON)</label>
+                        <textarea
+                          value={String(config.headers || "{}")}
+                          onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, headers: e.target.value } })}
+                          rows={2}
+                          placeholder='{"Content-Type": "application/json"}'
+                          className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary resize-none font-mono"
+                        />
+                      </div>
                     </>
                   )}
                   {data.icon === "shell" && (
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground">Command</label>
+                      <label className="text-[10px] font-medium text-muted-foreground">Command</label>
                       <textarea
-                        rows={3}
+                        value={String(config.command || "")}
+                        onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, command: e.target.value } })}
+                        rows={2}
                         placeholder="echo 'Hello World'"
-                        className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none font-mono"
+                        className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary resize-none font-mono"
                       />
                     </div>
                   )}
                   {data.icon === "fileOps" && (
                     <>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Operation</label>
-                        <select className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                          <option>Move</option>
-                          <option>Copy</option>
-                          <option>Delete</option>
-                          <option>Rename</option>
+                        <label className="text-[10px] font-medium text-muted-foreground">Operation</label>
+                        <select 
+                          value={String(config.operation || "move")}
+                          onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, operation: e.target.value } })}
+                          className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
+                          <option value="move">Move</option>
+                          <option value="copy">Copy</option>
+                          <option value="delete">Delete</option>
+                          <option value="rename">Rename</option>
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Target Path</label>
-                        <input
-                          type="text"
-                          placeholder="/path/to/target"
-                          className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <label className="text-[10px] font-medium text-muted-foreground">Target Path</label>
+                        <div className="mt-1">
+                          <FilePickerField
+                            value={String(config.targetPath || "")}
+                            onChange={(value) => updateNodeData(selectedNode.id, { config: { ...config, targetPath: value } })}
+                            placeholder="/path/to/target"
+                            mode="save"
+                          />
+                        </div>
                       </div>
                     </>
                   )}
@@ -215,35 +267,42 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
 
               {/* AI Settings */}
               {data.category === "ai" && (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Model</label>
-                    <select className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                      <option>GPT-4</option>
-                      <option>GPT-3.5 Turbo</option>
-                      <option>Claude 3</option>
-                      <option>Local LLM</option>
+                    <label className="text-[10px] font-medium text-muted-foreground">Model</label>
+                    <select 
+                      value={String(config.model || "gpt-4")}
+                      onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, model: e.target.value } })}
+                      className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="gpt-4">GPT-4</option>
+                      <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                      <option value="claude-3">Claude 3</option>
+                      <option value="local">Local LLM</option>
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Prompt</label>
+                    <label className="text-[10px] font-medium text-muted-foreground">Prompt</label>
                     <textarea
-                      rows={4}
+                      value={String(config.prompt || "")}
+                      onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, prompt: e.target.value } })}
+                      rows={3}
                       placeholder="Enter your prompt..."
-                      className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                      className="mt-1 w-full px-2 py-1.5 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Temperature</label>
+                    <label className="text-[10px] font-medium text-muted-foreground">Temperature: {Number(config.temperature || 0.7).toFixed(1)}</label>
                     <input
                       type="range"
                       min="0"
                       max="1"
                       step="0.1"
-                      defaultValue="0.7"
-                      className="mt-1 w-full"
+                      value={Number(config.temperature || 0.7)}
+                      onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, temperature: parseFloat(e.target.value) } })}
+                      className="mt-1 w-full h-1"
                     />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5">
                       <span>Precise</span>
                       <span>Creative</span>
                     </div>
@@ -256,18 +315,24 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
                 <div className="space-y-3">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Condition Type</label>
-                    <select className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                      <option>Equals</option>
-                      <option>Contains</option>
-                      <option>Greater Than</option>
-                      <option>Less Than</option>
-                      <option>Regex Match</option>
+                    <select 
+                      value={String(config.conditionType || "equals")}
+                      onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, conditionType: e.target.value } })}
+                      className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="equals">Equals</option>
+                      <option value="contains">Contains</option>
+                      <option value="greater">Greater Than</option>
+                      <option value="less">Less Than</option>
+                      <option value="regex">Regex Match</option>
                     </select>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Value</label>
                     <input
                       type="text"
+                      value={String(config.value || "")}
+                      onChange={(e) => updateNodeData(selectedNode.id, { config: { ...config, value: e.target.value } })}
                       placeholder="Comparison value"
                       className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     />
@@ -281,8 +346,8 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
         {/* No settings message */}
         {!hasSettings && (
           <div className="pt-2 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center py-4">
-              This node type has no additional settings.
+            <p className="text-[10px] text-muted-foreground text-center py-3">
+              No additional settings
             </p>
           </div>
         )}
