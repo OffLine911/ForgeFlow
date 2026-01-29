@@ -60,17 +60,18 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load settings from backend and apply theme
-    loadSettings().then(() => {
-      applyTheme();
-    });
-    
-    // Show splash for minimum 1 second
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    const initApp = async () => {
+      try {
+        await loadSettings();
+        applyTheme();
+      } catch (error) {
+        console.error("Failed to initialize app:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    initApp();
   }, [loadSettings, applyTheme]);
 
   if (isLoading) {

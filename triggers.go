@@ -13,18 +13,18 @@ import (
 )
 
 type TriggerManager struct {
-	ctx           context.Context
-	cancel        context.CancelFunc
-	mu            sync.RWMutex
-	engine        *Engine
-	storage       *Storage
-	cron          *cron.Cron
-	cronJobs      map[string]cron.EntryID
-	webhooks      map[string]*WebhookTrigger
-	fileWatchers  map[string]*FileWatcher
-	clipboardMon  *ClipboardMonitor
-	hotkeyMon     *HotkeyMonitor
-	httpServer    *http.Server
+	ctx          context.Context
+	cancel       context.CancelFunc
+	mu           sync.RWMutex
+	engine       *Engine
+	storage      *Storage
+	cron         *cron.Cron
+	cronJobs     map[string]cron.EntryID
+	webhooks     map[string]*WebhookTrigger
+	fileWatchers map[string]*FileWatcher
+	clipboardMon *ClipboardMonitor
+	hotkeyMon    *HotkeyMonitor
+	httpServer   *http.Server
 }
 
 type WebhookTrigger struct {
@@ -42,10 +42,10 @@ type FileWatcher struct {
 }
 
 type ClipboardMonitor struct {
-	FlowID       string
-	LastContent  string
-	TextOnly     bool
-	Cancel       context.CancelFunc
+	FlowID      string
+	LastContent string
+	TextOnly    bool
+	Cancel      context.CancelFunc
 }
 
 type HotkeyMonitor struct {
@@ -55,7 +55,7 @@ type HotkeyMonitor struct {
 
 func NewTriggerManager(engine *Engine, storage *Storage) *TriggerManager {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	tm := &TriggerManager{
 		ctx:          ctx,
 		cancel:       cancel,
@@ -67,9 +67,7 @@ func NewTriggerManager(engine *Engine, storage *Storage) *TriggerManager {
 		fileWatchers: make(map[string]*FileWatcher),
 		hotkeyMon:    &HotkeyMonitor{Hotkeys: make(map[string]string)},
 	}
-	
-	tm.cron.Start()
-	
+
 	return tm
 }
 
@@ -290,7 +288,7 @@ func (tm *TriggerManager) monitorClipboard(ctx context.Context) {
 			// Get clipboard content (simplified - would use Windows API)
 			// For now, this is a placeholder
 			// In production, use: github.com/atotto/clipboard or Windows API
-			
+
 			// Placeholder: would check clipboard and trigger if changed
 			// content := getClipboardContent()
 			// if content != tm.clipboardMon.LastContent {
@@ -345,7 +343,7 @@ func (tm *TriggerManager) UnregisterHotkey(hotkey string) error {
 // startWebhookServer starts the HTTP server for webhooks
 func (tm *TriggerManager) startWebhookServer() {
 	mux := http.NewServeMux()
-	
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		tm.mu.RLock()
 		webhookID := fmt.Sprintf("%s:%s", r.Method, r.URL.Path)
@@ -392,6 +390,7 @@ func (tm *TriggerManager) startWebhookServer() {
 
 // StartAllTriggers loads all flows and registers their enabled triggers
 func (tm *TriggerManager) StartAllTriggers() error {
+	tm.cron.Start()
 	flows, err := tm.storage.ListFlows()
 	if err != nil {
 		return fmt.Errorf("failed to list flows for trigger startup: %w", err)
@@ -535,7 +534,7 @@ func (tm *TriggerManager) GetActiveTriggers() map[string]interface{} {
 // Shutdown stops all triggers and cleans up
 func (tm *TriggerManager) Shutdown() {
 	tm.cancel()
-	
+
 	if tm.cron != nil {
 		ctx := tm.cron.Stop()
 		<-ctx.Done()

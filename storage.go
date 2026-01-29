@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 	"time"
 )
@@ -19,6 +20,13 @@ func NewStorage() *Storage {
 }
 
 func (s *Storage) Init() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.dataDir != "" {
+		return nil
+	}
+
 	configDir, err := os.UserConfigDir()
 	if err != nil {
 		return err
@@ -34,11 +42,7 @@ func (s *Storage) getFlowsDir() string {
 }
 
 func (s *Storage) SaveFlow(flowJSON string) (string, error) {
-	if s.dataDir == "" {
-		if err := s.Init(); err != nil {
-			return "", err
-		}
-	}
+	s.Init()
 
 	var flow Flow
 	if err := json.Unmarshal([]byte(flowJSON), &flow); err != nil {
@@ -65,11 +69,7 @@ func (s *Storage) SaveFlow(flowJSON string) (string, error) {
 }
 
 func (s *Storage) LoadFlow(flowID string) (string, error) {
-	if s.dataDir == "" {
-		if err := s.Init(); err != nil {
-			return "", err
-		}
-	}
+	s.Init()
 
 	filePath := filepath.Join(s.getFlowsDir(), flowID+".json")
 	data, err := os.ReadFile(filePath)
@@ -79,17 +79,22 @@ func (s *Storage) LoadFlow(flowID string) (string, error) {
 	return string(data), nil
 }
 
-// GetFlow is an alias for LoadFlow (used by TriggerManager)
 func (s *Storage) GetFlow(flowID string) (string, error) {
 	return s.LoadFlow(flowID)
 }
 
+type FlowMetadata struct {
+	ID          string        `json:"id"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Enabled     bool          `json:"enabled"`
+	CreatedAt   string        `json:"createdAt"`
+	UpdatedAt   string        `json:"updatedAt"`
+	Nodes       []interface{} `json:"nodes"`
+}
+
 func (s *Storage) ListFlows() ([]map[string]interface{}, error) {
-	if s.dataDir == "" {
-		if err := s.Init(); err != nil {
-			return nil, err
-		}
-	}
+	s.Init()
 
 	flowsDir := s.getFlowsDir()
 	entries, err := os.ReadDir(flowsDir)
@@ -109,54 +114,45 @@ func (s *Storage) ListFlows() ([]map[string]interface{}, error) {
 			continue
 		}
 
-		var flow map[string]interface{}
+		var flow FlowMetadata
 		if err := json.Unmarshal(data, &flow); err != nil {
 			continue
 		}
 
 		flows = append(flows, map[string]interface{}{
-			"id":          flow["id"],
-			"name":        flow["name"],
-			"description": flow["description"],
-			"enabled":     flow["enabled"],
-			"createdAt":   flow["createdAt"],
-			"updatedAt":   flow["updatedAt"],
-			"nodeCount":   len(flow["nodes"].([]interface{})),
+			"id":          flow.ID,
+			"name":        flow.Name,
+			"description": flow.Description,
+			"enabled":     flow.Enabled,
+			"createdAt":   flow.CreatedAt,
+			"updatedAt":   flow.UpdatedAt,
+			"nodeCount":   len(flow.Nodes),
 		})
 	}
+
+	sort.Slice(flows, func(i, j int) bool {
+		t1, _ := flows[i]["updatedAt"].(string)
+		t2, _ := flows[j]["updatedAt"].(string)
+		return t1 > t2
+	})
 
 	return flows, nil
 }
 
 func (s *Storage) DeleteFlow(flowID string) error {
-	if s.dataDir == "" {
-		if err := s.Init(); err != nil {
-			return err
-		}
-	}
-
+	s.Init()
 	filePath := filepath.Join(s.getFlowsDir(), flowID+".json")
 	return os.Remove(filePath)
 }
 
 func (s *Storage) SaveSettings(settingsJSON string) error {
-	if s.dataDir == "" {
-		if err := s.Init(); err != nil {
-			return err
-		}
-	}
-
+	s.Init()
 	filePath := filepath.Join(s.dataDir, "settings.json")
 	return os.WriteFile(filePath, []byte(settingsJSON), 0644)
 }
 
 func (s *Storage) LoadSettings() (string, error) {
-	if s.dataDir == "" {
-		if err := s.Init(); err != nil {
-			return "", err
-		}
-	}
-
+	s.Init()
 	filePath := filepath.Join(s.dataDir, "settings.json")
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -172,11 +168,7 @@ func (s *Storage) getExecutionsDir() string {
 }
 
 func (s *Storage) SaveExecution(executionJSON string) error {
-	if s.dataDir == "" {
-		if err := s.Init(); err != nil {
-			return err
-		}
-	}
+	s.Init()
 
 	var execution map[string]interface{}
 	if err := json.Unmarshal([]byte(executionJSON), &execution); err != nil {
@@ -188,7 +180,7 @@ func (s *Storage) SaveExecution(executionJSON string) error {
 		return fmt.Errorf("execution ID is required")
 	}
 
-	data, err := json.MarshalIndent(execution, "", "  ")
+	data, err := json.Marshal(execution)
 	if err != nil {
 		return err
 	}
@@ -198,11 +190,7 @@ func (s *Storage) SaveExecution(executionJSON string) error {
 }
 
 func (s *Storage) ListExecutions(limit int) ([]map[string]interface{}, error) {
-	if s.dataDir == "" {
-		if err := s.Init(); err != nil {
-			return nil, err
-		}
-	}
+	s.Init()
 
 	execDir := s.getExecutionsDir()
 	entries, err := os.ReadDir(execDir)
@@ -227,22 +215,18 @@ func (s *Storage) ListExecutions(limit int) ([]map[string]interface{}, error) {
 			continue
 		}
 
+		// Don't need full results in list
+		delete(execution, "results")
+
 		executions = append(executions, execution)
 	}
 
-	// Sort by startedAt descending (most recent first)
-	// Simple bubble sort for small datasets
-	for i := 0; i < len(executions)-1; i++ {
-		for j := 0; j < len(executions)-i-1; j++ {
-			t1, _ := executions[j]["startedAt"].(string)
-			t2, _ := executions[j+1]["startedAt"].(string)
-			if t1 < t2 {
-				executions[j], executions[j+1] = executions[j+1], executions[j]
-			}
-		}
-	}
+	sort.Slice(executions, func(i, j int) bool {
+		t1, _ := executions[i]["startedAt"].(string)
+		t2, _ := executions[j]["startedAt"].(string)
+		return t1 > t2
+	})
 
-	// Apply limit
 	if limit > 0 && len(executions) > limit {
 		executions = executions[:limit]
 	}
@@ -251,12 +235,7 @@ func (s *Storage) ListExecutions(limit int) ([]map[string]interface{}, error) {
 }
 
 func (s *Storage) DeleteExecution(execID string) error {
-	if s.dataDir == "" {
-		if err := s.Init(); err != nil {
-			return err
-		}
-	}
-
+	s.Init()
 	filePath := filepath.Join(s.getExecutionsDir(), execID+".json")
 	return os.Remove(filePath)
 }
@@ -271,7 +250,6 @@ func (s *Storage) ImportFlow(flowJSON string) (string, error) {
 		return "", fmt.Errorf("invalid flow JSON: %w", err)
 	}
 
-	// Generate new ID to avoid conflicts
 	flow.ID = fmt.Sprintf("flow-%d", time.Now().UnixNano())
 	flow.CreatedAt = time.Now().Format(time.RFC3339)
 	flow.UpdatedAt = time.Now().Format(time.RFC3339)

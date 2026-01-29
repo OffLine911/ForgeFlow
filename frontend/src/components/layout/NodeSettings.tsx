@@ -4,30 +4,7 @@ import { CronField, HotkeyField, FilePickerField, FolderPickerField } from "@/co
 import { useFlowStore } from "@/stores/flowStore";
 import { useAIStore } from "@/stores/aiStore";
 import { cn } from "@/lib/utils";
-import type { NodeCategory } from "@/types/flow";
 import { getNodeDefinition } from "@/nodes";
-
-const categoryLabels: Record<NodeCategory, string> = {
-  trigger: "Trigger",
-  condition: "Condition",
-  action: "Action",
-  ai: "AI Action",
-  output: "Output",
-  loop: "Loop",
-  utility: "Utility",
-  apps: "App Action",
-};
-
-const categoryColors: Record<NodeCategory, string> = {
-  trigger: "text-emerald-400 border-emerald-500/30",
-  condition: "text-amber-400 border-amber-500/30",
-  action: "text-blue-400 border-blue-500/30",
-  ai: "text-purple-400 border-purple-500/30",
-  output: "text-rose-400 border-rose-500/30",
-  loop: "text-violet-400 border-violet-500/30",
-  utility: "text-slate-400 border-slate-500/30",
-  apps: "text-teal-400 border-teal-500/30",
-};
 
 interface NodeSettingsProps {
   selectedNodeId: string | null;
@@ -67,22 +44,6 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
-        {/* Node Info */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-              Type
-            </label>
-            <span className="text-[10px] text-muted-foreground/50 font-mono">
-              {data.nodeType}
-            </span>
-          </div>
-          <div className={cn("px-2 py-1.5 rounded-md border bg-background/50 text-xs flex items-center gap-2", categoryColors[data.category])}>
-            <span className="text-sm">{data.icon}</span>
-            <span className="font-semibold">{categoryLabels[data.category]}</span>
-          </div>
-        </div>
-
         {/* Node Label */}
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">

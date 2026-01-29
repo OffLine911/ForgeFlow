@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"time"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -15,6 +16,9 @@ import (
 var assets embed.FS
 
 func main() {
+	start := time.Now()
+
+	// 1. Create service instances (Fast: just memory allocation)
 	app := NewApp()
 	storage := NewStorage()
 	engine := NewEngine(storage)
@@ -22,15 +26,7 @@ func main() {
 	actionService := NewActionService(app)
 	excelService := NewExcelService()
 
-	// Initialise storage and start all triggers
-	storage.Init()
-	go func() {
-		err := triggerManager.StartAllTriggers()
-		if err != nil {
-			fmt.Printf("Error starting triggers: %v\n", err)
-		}
-	}()
-
+	// 2. Launch Wails window immediately
 	err := wails.Run(&options.App{
 		Title:             "ForgeFlow",
 		Width:             1280,
@@ -42,11 +38,22 @@ func main() {
 		Frameless:         true,
 		StartHidden:       false,
 		HideWindowOnClose: false,
-		BackgroundColour:  &options.RGBA{R: 30, G: 30, B: 30, A: 255}, // #1e1e1e to match app
+		BackgroundColour:  &options.RGBA{R: 30, G: 30, B: 30, A: 255},
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		OnStartup: app.startup,
+		OnStartup: func(ctx context.Context) {
+			// Initialize app context for binding
+			app.startup(ctx)
+
+			// 3. Move disk-heavy initialization to a background goroutine
+			// This allows the splash screen to show UP instantly.
+			go func() {
+				storage.Init()
+				triggerManager.StartAllTriggers()
+				fmt.Printf("✅ ForgeFlow Engine ready in %v\n", time.Since(start))
+			}()
+		},
 		OnShutdown: func(ctx context.Context) {
 			triggerManager.Shutdown()
 			app.shutdown(ctx)
@@ -75,6 +82,6 @@ func main() {
 	})
 
 	if err != nil {
-		println("Error:", err.Error())
+		fmt.Printf("Startup Error: %v\n", err)
 	}
 }
