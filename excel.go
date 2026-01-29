@@ -33,7 +33,7 @@ func (es *ExcelService) WriteExcel(path string, dataJSON string, sheetName strin
 	if sheetName == "" {
 		sheetName = "Sheet1"
 	}
-	
+
 	index, err := f.NewSheet(sheetName)
 	if err != nil {
 		return fmt.Errorf("failed to create sheet: %w", err)
@@ -106,13 +106,13 @@ func (es *ExcelService) ReadExcel(path string, sheetName string) (string, error)
 
 	// First row as headers
 	headers := rows[0]
-	
+
 	// Convert to array of objects
 	var data []map[string]interface{}
 	for i := 1; i < len(rows); i++ {
 		row := rows[i]
 		record := make(map[string]interface{})
-		
+
 		for j, header := range headers {
 			if j < len(row) {
 				record[header] = row[j]
@@ -120,7 +120,7 @@ func (es *ExcelService) ReadExcel(path string, sheetName string) (string, error)
 				record[header] = ""
 			}
 		}
-		
+
 		data = append(data, record)
 	}
 
