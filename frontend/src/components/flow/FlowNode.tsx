@@ -2,161 +2,192 @@ import { memo } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { NodeStatus, NodeCategory } from "@/types/flow";
+import type { NodeCategory, NodeStatus } from "@/types/flow";
+
+/* ------------------------------------------------ */
+/* Layout constants (CRITICAL)                      */
+/* ------------------------------------------------ */
+
+const FLOW_ROW_HEIGHT = 56;
+
+const ACTION_NODE_WIDTH = 180;
+const ACTION_NODE_HEIGHT = 48;
+
+const TRIGGER_NODE_SIZE = 44;
+const ICON_SIZE = 28;
+
+/* ------------------------------------------------ */
+/* Category colors                                  */
+/* ------------------------------------------------ */
+
+const CATEGORY_COLORS: Record<NodeCategory, string> = {
+  trigger: "#10b981",
+  condition: "#f59e0b",
+  action: "#3b82f6",
+  loop: "#8b5cf6",
+  utility: "#64748b",
+  ai: "#a855f7",
+  apps: "#14b8a6",
+};
+
+/* ------------------------------------------------ */
+/* Types                                            */
+/* ------------------------------------------------ */
 
 interface FlowNodeProps {
   data: {
     label: string;
     category: NodeCategory;
     icon?: string;
-    description?: string;
     status?: NodeStatus;
+    isConfigured?: boolean;
   };
   selected?: boolean;
 }
 
-// Simple square node size for triggers and outputs
-const SIMPLE_NODE_SIZE = 40;
+/* ================================================= */
+/* ACTION / STANDARD NODE                            */
+/* ================================================= */
 
-const categoryColors: Record<NodeCategory, string> = {
-  trigger: "#10b981", // emerald-500
-  condition: "#f59e0b", // amber-500
-  action: "#3b82f6", // blue-500
-  loop: "#8b5cf6", // violet-500
-  utility: "#6366f1", // indigo-500
-  ai: "#a855f7", // purple-500
-  apps: "#0d9488", // teal-600
-};
-
-function FlowNode({ data, selected }: FlowNodeProps) {
+function ActionNode({ data, selected }: FlowNodeProps) {
+  const color = CATEGORY_COLORS[data.category];
   const isRunning = data.status === "running";
-  const isSuccess = data.status === "success";
-  const isError = data.status === "error";
-  const categoryColor = categoryColors[data.category] || categoryColors.action;
-
-  // Simple square UI for triggers only
-  if (data.category === "trigger") {
-    return (
-      <div className="flex flex-col items-center gap-1">
-        {/* Label above */}
-        <span className="text-[9px] font-semibold text-muted-foreground/70">
-          {data.label}
-        </span>
-
-        {/* Square icon node */}
-        <div
-          className={cn(
-            "relative flex items-center justify-center rounded-lg transition-all duration-200 cursor-move select-none",
-            selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-            isRunning && "animate-pulse"
-          )}
-          style={{
-            width: SIMPLE_NODE_SIZE,
-            height: SIMPLE_NODE_SIZE,
-            backgroundColor: isSuccess
-              ? "#10b981"
-              : isError
-              ? "#ef4444"
-              : categoryColor,
-            boxShadow: selected
-              ? `0 0 0 2px ${categoryColor}20`
-              : "0 2px 6px rgba(0,0,0,0.25)",
-          }}
-        >
-          {isRunning ? (
-            <Loader2 className="w-5 h-5 text-white animate-spin" />
-          ) : (
-            <span className="text-lg">{data.icon || "●"}</span>
-          )}
-
-          {/* Output port for triggers */}
-          <Handle
-            type="source"
-            position={Position.Right}
-            className="!w-2 !h-2 !-right-1 !border-2"
-            style={{
-              backgroundColor: "#166534",
-              borderColor: categoryColor,
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Card-style UI for all other nodes (actions, conditions, loops, utilities, AI, apps)
-  const cardBg =
-    data.category === "condition"
-      ? "bg-amber-950/30"
-      : data.category === "ai"
-      ? "bg-purple-950/30"
-      : data.category === "loop"
-      ? "bg-violet-950/30"
-      : data.category === "utility"
-      ? "bg-indigo-950/30"
-      : data.category === "apps"
-      ? "bg-teal-950/30"
-      : "bg-blue-950/30";
-
-  const cardBorder =
-    data.category === "condition"
-      ? "border-amber-500/30"
-      : data.category === "ai"
-      ? "border-purple-500/30"
-      : data.category === "loop"
-      ? "border-violet-500/30"
-      : data.category === "utility"
-      ? "border-indigo-500/30"
-      : data.category === "apps"
-      ? "border-teal-500/30"
-      : "border-blue-500/30";
-
-  const glowColor =
-    data.category === "condition"
-      ? "shadow-amber-500/40"
-      : data.category === "ai"
-      ? "shadow-purple-500/40"
-      : data.category === "loop"
-      ? "shadow-violet-500/40"
-      : data.category === "utility"
-      ? "shadow-indigo-500/40"
-      : data.category === "apps"
-      ? "shadow-teal-500/40"
-      : "shadow-blue-500/40";
 
   return (
     <div
-      className={cn(
-        "px-3 py-2 rounded-lg border min-w-[120px] transition-all duration-200",
-        cardBg,
-        cardBorder,
-        selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-        isRunning && `animate-pulse shadow-lg ${glowColor}`,
-        isSuccess && "shadow-lg shadow-emerald-500/40",
-        isError && "shadow-lg shadow-red-500/40"
-      )}
+      className="flex items-center"
+      style={{ height: FLOW_ROW_HEIGHT }}
     >
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="!w-2 !h-2 !bg-muted !border !border-foreground/20"
-      />
+      <div
+        className={cn(
+          "relative flex items-center gap-3 rounded-xl border px-3",
+          "bg-background/90 backdrop-blur transition-all duration-200",
+          selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+          isRunning && "animate-pulse shadow-lg"
+        )}
+        style={{
+          width: ACTION_NODE_WIDTH,
+          height: ACTION_NODE_HEIGHT,
+          borderColor: `${color}55`,
+        }}
+      >
+        {/* INPUT */}
+        <Handle
+          type="target"
+          position={Position.Left}
+          className="!w-2 !h-2 !bg-muted !border !border-foreground/30"
+        />
 
-      <div className="flex items-center gap-1.5">
-        <span className="text-lg">{data.icon || "●"}</span>
-        <span className="text-xs font-medium truncate flex-1">{data.label}</span>
-        {isRunning && <Loader2 className="w-3 h-3 animate-spin text-blue-400" />}
-        {isSuccess && <span className="text-emerald-400 text-xs">✓</span>}
-        {isError && <span className="text-red-400 text-xs">✗</span>}
+        {/* ICON */}
+        <div
+          className="flex items-center justify-center rounded-md text-white"
+          style={{
+            width: ICON_SIZE,
+            height: ICON_SIZE,
+            backgroundColor: color,
+          }}
+        >
+          {isRunning ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <span className="text-sm">{data.icon || "●"}</span>
+          )}
+        </div>
+
+        {/* LABEL */}
+        <span className="text-xs font-medium truncate flex-1">
+          {data.label}
+        </span>
+
+        {/* CONFIG WARNING */}
+        {!data.isConfigured && (
+          <span
+            title="Not configured"
+            className="text-[10px] text-amber-400"
+          >
+            ⚠
+          </span>
+        )}
+
+        {/* OUTPUT */}
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="!w-2 !h-2 !bg-muted !border !border-foreground/30"
+        />
       </div>
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!w-2 !h-2 !bg-muted !border !border-foreground/20"
-      />
     </div>
   );
+}
+
+/* ================================================= */
+/* TRIGGER NODE (CORRECT & COMPACT)                  */
+/* ================================================= */
+
+function TriggerNode({ data, selected }: FlowNodeProps) {
+  const color = CATEGORY_COLORS.trigger;
+  const isRunning = data.status === "running";
+
+  return (
+    <div
+      className="flex flex-col items-center justify-center"
+      style={{ height: FLOW_ROW_HEIGHT }}
+    >
+      {/* LABEL (does NOT affect geometry) */}
+      <span className="text-[10px] text-muted-foreground mb-1 select-none">
+        {data.label}
+      </span>
+
+      {/* ACTUAL NODE */}
+      <div
+        className={cn(
+          "relative flex items-center justify-center rounded-xl border",
+          "bg-emerald-950/40 backdrop-blur transition-all duration-200",
+          selected &&
+            "ring-2 ring-emerald-400 ring-offset-2 ring-offset-background",
+          isRunning && "animate-pulse shadow-lg shadow-emerald-500/40"
+        )}
+        style={{
+          width: TRIGGER_NODE_SIZE,
+          height: TRIGGER_NODE_SIZE,
+          borderColor: `${color}AA`,
+        }}
+      >
+        <div
+          className="flex items-center justify-center rounded-lg text-white"
+          style={{
+            width: 24,
+            height: 24,
+            backgroundColor: color,
+          }}
+        >
+          {isRunning ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <span className="text-sm">{data.icon || "▶"}</span>
+          )}
+        </div>
+
+        {/* OUTPUT ONLY */}
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="!w-2 !h-2 !bg-emerald-400 !border !border-emerald-600"
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ================================================= */
+/* MAIN NODE SWITCH                                  */
+/* ================================================= */
+
+function FlowNode(props: FlowNodeProps) {
+  if (props.data.category === "trigger") {
+    return <TriggerNode {...props} />;
+  }
+  return <ActionNode {...props} />;
 }
 
 export default memo(FlowNode);

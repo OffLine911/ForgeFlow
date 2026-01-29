@@ -15,13 +15,12 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
   const { nodes, updateNodeData } = useFlowStore();
   const { models, fetchModels, isLoading: isModelsLoading } = useAIStore();
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
-  
   if (!selectedNode) return null;
 
   const { data } = selectedNode;
   const config = (data.config || {}) as Record<string, any>;
   const definition = getNodeDefinition(data.nodeType || "");
-  const hasFields = definition && definition.fields && definition.fields.length > 0;
+  const hasFields = definition?.fields && definition.fields.length > 0;
 
   const handleConfigChange = (key: string, value: any) => {
     updateNodeData(selectedNode.id, {
@@ -30,15 +29,15 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
   };
 
   return (
-    <aside className="w-64 h-full bg-card border-l border-border flex flex-col text-xs">
+    <aside className="w-64 h-full bg-card/70 backdrop-blur-md border-l border-border flex flex-col text-xs">
       {/* Header */}
-      <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <Settings className="w-3.5 h-3.5 text-muted-foreground" />
-          <h2 className="text-xs font-semibold">Settings</h2>
+      <div className="px-3 py-2 border-b border-border flex items-center justify-between bg-background/30 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <Settings className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-xs font-semibold">Node Settings</h2>
         </div>
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onClose}>
-          <X className="w-3.5 h-3.5" />
+          <X className="w-4 h-4" />
         </Button>
       </div>
 
@@ -46,48 +45,51 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
         {/* Node Label */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             Label
           </label>
           <input
             type="text"
             value={data.label}
             onChange={(e) => updateNodeData(selectedNode.id, { label: e.target.value })}
-            className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+            className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm transition-all"
           />
         </div>
 
         {/* Description */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             Description
           </label>
           <textarea
             value={data.description || ""}
             onChange={(e) => updateNodeData(selectedNode.id, { description: e.target.value })}
             rows={2}
-            className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none transition-all"
+            className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm resize-none transition-all"
             placeholder="Node purpose..."
           />
         </div>
 
         {/* Dynamic Configuration */}
         <div className="pt-3 border-t border-border space-y-3">
-          <div className="flex items-center gap-1.5 mb-3">
+          <div className="flex items-center gap-2 mb-3">
             <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
               Configuration
             </h3>
             {definition?.description && (
-              <div title={definition.description} className="cursor-help text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+              <div
+                title={definition.description}
+                className="cursor-help text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+              >
                 <Info className="w-3 h-3" />
               </div>
             )}
           </div>
 
           {hasFields ? (
-            <div className="space-y-3.5">
-              {definition.fields.map((field) => (
-                <div key={field.key} className="space-y-1.5">
+            <div className="space-y-3">
+              {definition?.fields?.map((field) => (
+                <div key={field.key} className="space-y-1">
                   <div className="flex items-center justify-between">
                     <label className="text-[10px] font-medium text-muted-foreground">
                       {field.label}
@@ -95,66 +97,62 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
                     </label>
                   </div>
 
+                  {/* Input Variants */}
                   {field.type === "text" && (
                     <input
                       type="text"
                       value={String(config[field.key] ?? "")}
                       onChange={(e) => handleConfigChange(field.key, e.target.value)}
                       placeholder={field.placeholder}
-                      className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                      className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm transition-all"
                     />
                   )}
-
                   {field.type === "textarea" && (
                     <textarea
                       value={String(config[field.key] ?? "")}
                       onChange={(e) => handleConfigChange(field.key, e.target.value)}
                       placeholder={field.placeholder}
                       rows={3}
-                      className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 resize-vertical transition-all font-mono"
+                      className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm resize-vertical transition-all"
                     />
                   )}
-
                   {field.type === "number" && (
                     <input
                       type="number"
                       value={Number(config[field.key] ?? 0)}
                       onChange={(e) => handleConfigChange(field.key, parseFloat(e.target.value))}
                       placeholder={field.placeholder}
-                      className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                      className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm transition-all"
                     />
                   )}
-
                   {field.type === "password" && (
                     <input
                       type="password"
                       value={String(config[field.key] ?? "")}
                       onChange={(e) => handleConfigChange(field.key, e.target.value)}
                       placeholder={field.placeholder}
-                      className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                      className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm transition-all"
                     />
                   )}
-
                   {field.type === "select" && (
                     <select
                       value={String(config[field.key] ?? "")}
                       onChange={(e) => handleConfigChange(field.key, e.target.value)}
-                      className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                      className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm transition-all"
                     >
                       {field.options?.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
                   )}
 
+                  {/* Boolean toggle */}
                   {field.type === "boolean" && (
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <div className="relative inline-flex h-4 w-7 items-center rounded-full bg-border group-hover:bg-border/80 transition-colors">
                         <input
                           type="checkbox"
-                          className="sr-only p-0"
+                          className="sr-only"
                           checked={!!config[field.key]}
                           onChange={(e) => handleConfigChange(field.key, e.target.checked)}
                         />
@@ -171,48 +169,12 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
                     </label>
                   )}
 
-                  {field.type === "cron" && (
-                    <CronField
-                      value={String(config[field.key] ?? "")}
-                      onChange={(value) => handleConfigChange(field.key, value)}
-                      placeholder={field.placeholder}
-                    />
-                  )}
-
-                  {field.type === "hotkey" && (
-                    <HotkeyField
-                      value={String(config[field.key] ?? "")}
-                      onChange={(value) => handleConfigChange(field.key, value)}
-                      placeholder={field.placeholder}
-                    />
-                  )}
-
-                  {field.type === "file" && (
-                    <FilePickerField
-                      value={String(config[field.key] ?? "")}
-                      onChange={(value) => handleConfigChange(field.key, value)}
-                      placeholder={field.placeholder}
-                      mode="open"
-                    />
-                  )}
-                  
-                  {field.type === "file-save" && (
-                    <FilePickerField
-                      value={String(config[field.key] ?? "")}
-                      onChange={(value) => handleConfigChange(field.key, value)}
-                      placeholder={field.placeholder}
-                      mode="save"
-                    />
-                  )}
-
-                  {field.type === "folder" && (
-                    <FolderPickerField
-                      value={String(config[field.key] ?? "")}
-                      onChange={(value) => handleConfigChange(field.key, value)}
-                      placeholder={field.placeholder}
-                    />
-                  )}
-
+                  {/* Cron / Hotkey / File / Folder / Model */}
+                  {field.type === "cron" && <CronField value={String(config[field.key] ?? "")} onChange={(v) => handleConfigChange(field.key, v)} placeholder={field.placeholder} />}
+                  {field.type === "hotkey" && <HotkeyField value={String(config[field.key] ?? "")} onChange={(v) => handleConfigChange(field.key, v)} placeholder={field.placeholder} />}
+                  {field.type === "file" && <FilePickerField value={String(config[field.key] ?? "")} onChange={(v) => handleConfigChange(field.key, v)} placeholder={field.placeholder} mode="open" />}
+                  {field.type === "file-save" && <FilePickerField value={String(config[field.key] ?? "")} onChange={(v) => handleConfigChange(field.key, v)} placeholder={field.placeholder} mode="save" />}
+                  {field.type === "folder" && <FolderPickerField value={String(config[field.key] ?? "")} onChange={(v) => handleConfigChange(field.key, v)} placeholder={field.placeholder} />}
                   {field.type === "model-select" && (
                     <div className="space-y-1.5">
                       <div className="relative">
@@ -222,7 +184,7 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
                           value={String(config[field.key] ?? "")}
                           onChange={(e) => handleConfigChange(field.key, e.target.value)}
                           placeholder={config.provider === 'groq' ? 'llama3-8b-8192' : config.provider === 'openrouter' ? 'google/gemini-flash-1.5' : 'gpt-4o-mini'}
-                          className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                          className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm transition-all"
                         />
                         <datalist id={`models-${field.key}-${selectedNode.id}`}>
                           {(models[config.provider as keyof typeof models] || []).map(m => (
@@ -230,21 +192,19 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
                           ))}
                         </datalist>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto p-0.5 custom-scrollbar">
                         {isModelsLoading[config.provider as keyof typeof isModelsLoading] ? (
                           <div className="text-[9px] text-muted-foreground animate-pulse py-1">Loading models...</div>
                         ) : (models[config.provider as keyof typeof models] || []).length > 0 ? (
                           (models[config.provider as keyof typeof models] || []).slice(0, 10).map(m => (
-                            <button 
+                            <button
                               key={m.id}
                               type="button"
                               onClick={() => handleConfigChange(field.key, m.id)}
                               className={cn(
                                 "px-1.5 py-0.5 rounded text-[9px] border transition-colors",
-                                config[field.key] === m.id
-                                  ? "bg-primary/20 border-primary/40 text-primary"
-                                  : "bg-muted/50 hover:bg-muted text-muted-foreground border-border"
+                                config[field.key] === m.id ? "bg-primary/20 border-primary/40 text-primary" : "bg-muted/50 hover:bg-muted text-muted-foreground border-border"
                               )}
                               title={m.name}
                             >
@@ -252,11 +212,7 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
                             </button>
                           ))
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => fetchModels(config.provider as any)}
-                            className="text-[9px] text-primary hover:underline"
-                          >
+                          <button type="button" onClick={() => fetchModels(config.provider as any)} className="text-[9px] text-primary hover:underline">
                             Load Models
                           </button>
                         )}
