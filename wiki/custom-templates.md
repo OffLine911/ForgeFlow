@@ -17,11 +17,12 @@ Every template is a JSON object with this structure:
   "description": "What this template does",
   "icon": "🚀",
   "category": "Automation",
-  "author": "YourGitHubUsername",
   "nodes": [...],
   "connections": [...]
 }
 ```
+
+**Note:** The `author` field is stored in `index.json`, not in individual template files. This keeps templates focused on workflow data.
 
 ## Fields Explained
 
@@ -34,9 +35,10 @@ Every template is a JSON object with this structure:
 | `description` | string | `"Backup files daily"` | Short description (1-2 sentences) |
 | `icon` | string | `"💾"` | Single emoji icon |
 | `category` | string | `"Automation"` | Template category |
-| `author` | string | `"OffLine911"` | Your GitHub username |
 | `nodes` | array | `[...]` | Array of node definitions |
 | `connections` | array | `[...]` | Array of edge connections |
+
+**Note:** `author` is specified in `index.json`, not in the template file itself.
 
 ### Categories
 
@@ -135,7 +137,7 @@ Some nodes have multiple output ports:
 
 ## Complete Example
 
-Here's a full template example:
+Here's a full template file (`templates/morning-greeting.json`):
 
 ```json
 {
@@ -144,7 +146,6 @@ Here's a full template example:
   "description": "Show a greeting notification every morning at 8 AM",
   "icon": "🌅",
   "category": "Productivity",
-  "author": "OffLine911",
   "nodes": [
     {
       "type": "trigger_schedule",
@@ -219,12 +220,104 @@ Use `{{variableName}}` syntax to reference:
 4. Run the workflow to verify it works
 5. Check all paths execute correctly
 
+## Repository Structure
+
+The ForgeFlow-Community repository uses a modular structure:
+
+```
+ForgeFlow-Community/
+├── index.json              # Template registry
+└── templates/              # Individual template files
+    ├── morning-greeting.json
+    ├── file-backup.json
+    └── ...
+```
+
+### index.json Format
+
+The `index.json` file lists all available templates:
+
+```json
+{
+  "templates": [
+    {
+      "id": "morning-greeting",
+      "file": "morning-greeting.json",
+      "name": "Morning Greeting",
+      "description": "Show a greeting notification every morning at 8 AM",
+      "icon": "🌅",
+      "category": "Productivity",
+      "author": "OffLine911",
+      "downloads": 42
+    }
+  ]
+}
+```
+
+#### Index Entry Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | ✅ | Unique identifier (must match template file) |
+| `file` | ✅ | Filename in `templates/` folder |
+| `name` | ✅ | Display name |
+| `description` | ✅ | Short description (1-2 sentences) |
+| `icon` | ✅ | Single emoji |
+| `category` | ✅ | Template category |
+| `author` | ✅ | GitHub username |
+| `downloads` | ❌ | Download count (auto-updated) |
+
+### Why Modular?
+
+✅ **Benefits:**
+- Each template is its own file - easier to review and maintain
+- Parallel loading for faster performance
+- Simpler git history - one file per change
+- Easy to add/remove templates without merge conflicts
+- Better organization as the library grows
+
 ## Submitting Your Template
 
+### Step 1: Create Your Template File
+
+1. Create a new JSON file in the `templates/` folder
+2. Name it using kebab-case: `my-template-name.json`
+3. Follow the template structure shown above
+
+### Step 2: Update the Index
+
+Add an entry to `index.json`:
+
+```json
+{
+  "id": "my-template-name",
+  "file": "my-template-name.json",
+  "name": "My Template Name",
+  "description": "Brief description",
+  "icon": "🚀",
+  "category": "Automation",
+  "author": "YourGitHubUsername"
+}
+```
+
+### Step 3: Submit
+
 1. Fork the [ForgeFlow-Community](https://github.com/OffLine911/ForgeFlow-Community) repo
-2. Add your template to `templates.json`
-3. Test it works in ForgeFlow
-4. Submit a Pull Request
+2. Add your template file to `templates/` folder
+3. Update `index.json` with your template entry
+4. Test it works in ForgeFlow
+5. Submit a Pull Request with:
+   - Template file: `templates/your-template.json`
+   - Updated: `index.json`
+
+### Pull Request Checklist
+
+- [ ] Template file is valid JSON
+- [ ] Template has been tested in ForgeFlow
+- [ ] `index.json` entry matches template metadata
+- [ ] No hardcoded secrets or personal paths
+- [ ] Description is clear and concise
+- [ ] Icon is a single emoji
 
 ---
 

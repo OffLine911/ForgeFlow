@@ -29,7 +29,21 @@ interface WorkflowPanelState {
   fetchCommunityTemplates: () => Promise<void>;
 }
 
-const COMMUNITY_TEMPLATES_URL = 'https://raw.githubusercontent.com/OffLine911/ForgeFlow-Community/main/templates.json';
+const COMMUNITY_BASE_URL = 'https://raw.githubusercontent.com/OffLine911/ForgeFlow-Community/main';
+const COMMUNITY_INDEX_URL = `${COMMUNITY_BASE_URL}/index.json`;
+
+interface TemplateIndex {
+  templates: Array<{
+    id: string;
+    file: string;
+    name: string;
+    description: string;
+    icon: string;
+    category: string;
+    author: string;
+    downloads?: number;
+  }>;
+}
 
 export const useWorkflowStore = create<WorkflowPanelState>()((set, get) => ({
   workflowPanelOpen: false,
@@ -54,17 +68,48 @@ export const useWorkflowStore = create<WorkflowPanelState>()((set, get) => ({
     set({ communityLoading: true, communityError: null });
     
     try {
-      const response = await HTTPRequest('GET', COMMUNITY_TEMPLATES_URL, {}, '');
+      // Fetch the index file
+      const indexResponse = await HTTPRequest('GET', COMMUNITY_INDEX_URL, {}, '');
       
-      if (response.error) {
-        throw new Error(response.error);
+      if (indexResponse.error) {
+        throw new Error(indexResponse.error);
       }
       
-      const templates = response.json || JSON.parse(response.body);
+      const index: TemplateIndex = indexResponse.json || JSON.parse(indexResponse.body);
       
-      if (!Array.isArray(templates)) {
-        throw new Error('Invalid template format');
+      if (!index.templates || !Array.isArray(index.templates)) {
+        throw new Error('Invalid index format');
       }
+      
+      // Fetch all template files in parallel
+      const templatePromises = index.templates.map(async (item) => {
+        try {
+          const templateUrl = `${COMMUNITY_BASE_URL}/templates/${item.file}`;
+          const response = await HTTPRequest('GET', templateUrl, {}, '');
+          
+          if (response.error) {
+            console.warn(`Failed to load template ${item.id}:`, response.error);
+            return null;
+          }
+          
+          const template = response.json || JSON.parse(response.body);
+          
+          // Merge index metadata with template data
+          return {
+            ...template,
+            author: item.author,
+            downloads: item.downloads,
+            source: templateUrl,
+          } as CommunityTemplate;
+        } catch (error) {
+          console.warn(`Failed to load template ${item.id}:`, error);
+          return null;
+        }
+      });
+      
+      const templates = (await Promise.all(templatePromises)).filter(
+        (t): t is CommunityTemplate => t !== null
+      );
       
       set({ communityTemplates: templates, communityLoading: false });
     } catch (error) {
