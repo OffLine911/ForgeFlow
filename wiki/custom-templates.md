@@ -225,7 +225,7 @@ Use `{{variableName}}` syntax to reference:
 The ForgeFlow-Community repository uses a modular structure:
 
 ```
-ForgeFlow-Community/
+ForgeFlow-community/
 ├── index.json              # Template registry
 └── templates/              # Individual template files
     ├── morning-greeting.json
@@ -302,7 +302,7 @@ Add an entry to `index.json`:
 
 ### Step 3: Submit
 
-1. Fork the [ForgeFlow-Community](https://github.com/OffLine911/ForgeFlow-Community) repo
+1. Fork the [ForgeFlow-community](https://github.com/OffLine911/ForgeFlow-community) repo
 2. Add your template file to `templates/` folder
 3. Update `index.json` with your template entry
 4. Test it works in ForgeFlow

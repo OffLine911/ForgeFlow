@@ -7,11 +7,16 @@ let TriggerManagerModule: any = null;
 async function getTriggerManager() {
   if (!TriggerManagerModule) {
     try {
+      // Check if we're in a Wails environment
+      if (typeof window !== 'undefined' && !(window as any).go) {
+        // Not in Wails environment, skip
+        return null;
+      }
+      
       // Use dynamic import to avoid TypeScript compile-time checks
-      const modulePath = '../wailsjs/go/main/TriggerManager';
-      TriggerManagerModule = await import(/* @vite-ignore */ modulePath);
+      TriggerManagerModule = await import('../../wailsjs/go/main/TriggerManager');
     } catch (error) {
-      console.warn('TriggerManager not available:', error);
+      // Silently fail - TriggerManager is optional in dev mode
       return null;
     }
   }

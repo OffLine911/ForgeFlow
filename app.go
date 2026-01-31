@@ -26,7 +26,7 @@ func (a *App) shutdown(ctx context.Context) {
 func (a *App) GetAppInfo() map[string]string {
 	return map[string]string{
 		"name":    "ForgeFlow",
-		"version": "0.1.0",
+		"version": "0.2.7",
 		"tagline": "Local automation. Zero cloud. Full control.",
 	}
 }

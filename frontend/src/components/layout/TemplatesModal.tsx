@@ -14,7 +14,8 @@ type TabType = 'local' | 'community';
 export default function TemplatesModal() {
   const { 
     templateModalOpen, setTemplateModalOpen, setWorkflowPanelOpen,
-    communityTemplates, communityLoading, communityError, fetchCommunityTemplates
+    communityTemplates, communityLoading, communityError, 
+    fetchCommunityTemplates, clearCommunityTemplates
   } = useWorkflowStore();
   const { setNodes, setEdges, saveFlow, pushHistory } = useFlowStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,10 +25,10 @@ export default function TemplatesModal() {
 
   // Fetch community templates when switching to community tab
   useEffect(() => {
-    if (activeTab === 'community' && communityTemplates.length === 0 && !communityLoading) {
+    if (activeTab === 'community' && communityTemplates.length === 0 && !communityLoading && !communityError) {
       fetchCommunityTemplates();
     }
-  }, [activeTab, communityTemplates.length, communityLoading, fetchCommunityTemplates]);
+  }, [activeTab, communityTemplates.length, communityLoading, communityError, fetchCommunityTemplates]);
 
   const filteredTemplates = useMemo(() => {
     const sourceTemplates = activeTab === 'local' ? workflowTemplates : communityTemplates;
@@ -65,6 +66,7 @@ export default function TemplatesModal() {
     setSelectedTemplate(null);
     setSearchQuery('');
     setSelectedCategory(null);
+    setActiveTab('local'); // Reset to local tab
   };
 
   const handleSelectTemplate = (template: WorkflowTemplate) => {
@@ -74,6 +76,24 @@ export default function TemplatesModal() {
   const handleUseTemplate = async () => {
     if (!selectedTemplate) return;
 
+    console.log('Loading template:', selectedTemplate.name);
+    console.log('Template data:', JSON.stringify(selectedTemplate, null, 2));
+
+    // Helper to check if node is configured
+    const isNodeConfigured = (nodeType: string, config: Record<string, any>): boolean => {
+      const nodeDef = nodeDefinitions.find(n => n.type === nodeType);
+      if (!nodeDef?.fields) return true; // No fields = always configured
+      
+      const requiredFields = nodeDef.fields.filter(f => f.required);
+      if (requiredFields.length === 0) return true; // No required fields = always configured
+      
+      // Check if all required fields have values
+      return requiredFields.every(f => {
+        const value = config[f.key];
+        return value !== undefined && value !== null && value !== '';
+      });
+    };
+
     // Convert template nodes to FlowNodes
     const nodes: FlowNode[] = selectedTemplate.nodes.map((templateNode, index) => {
       // Find matching node definition
@@ -81,6 +101,8 @@ export default function TemplatesModal() {
       const category = nodeDef?.category || 'action';
       const label = nodeDef?.name || templateNode.type;
       const icon = nodeDef?.icon || 'play';
+      
+      const config = { ...nodeDef?.defaultData, ...templateNode.data };
 
       const nodeData: NodeData = {
         label,
@@ -89,7 +111,8 @@ export default function TemplatesModal() {
         description: nodeDef?.description || '',
         status: 'idle',
         nodeType: templateNode.type,
-        config: { ...nodeDef?.defaultData, ...templateNode.data },
+        config,
+        isConfigured: isNodeConfigured(templateNode.type, config),
       };
 
       return {
@@ -101,20 +124,39 @@ export default function TemplatesModal() {
     });
 
     // Convert template connections to FlowEdges
-    const edges: FlowEdge[] = selectedTemplate.connections.map((conn, index) => {
-      const sourceNode = nodes[conn.sourceIndex];
-      const targetNode = nodes[conn.targetIndex];
-      
-      return {
-        id: `edge-${index}-${Date.now()}`,
-        source: sourceNode.id,
-        target: targetNode.id,
-        sourceHandle: conn.sourcePort || null,
-        targetHandle: conn.targetPort || null,
-        type: 'smoothstep',
-        animated: true,
-      };
-    });
+    const edges: FlowEdge[] = selectedTemplate.connections
+      .filter((conn, index) => {
+        const sourceNode = nodes[conn.sourceIndex];
+        const targetNode = nodes[conn.targetIndex];
+        
+        // Validate that both nodes exist
+        if (!sourceNode || !targetNode) {
+          console.warn(`Invalid connection at index ${index}:`, {
+            sourceIndex: conn.sourceIndex,
+            targetIndex: conn.targetIndex,
+            sourceNode: sourceNode?.id,
+            targetNode: targetNode?.id,
+            totalNodes: nodes.length
+          });
+          return false;
+        }
+        
+        return true;
+      })
+      .map((conn, index) => {
+        const sourceNode = nodes[conn.sourceIndex];
+        const targetNode = nodes[conn.targetIndex];
+        
+        return {
+          id: `edge-${index}-${Date.now()}`,
+          source: sourceNode.id,
+          target: targetNode.id,
+          sourceHandle: conn.sourcePort || null,
+          targetHandle: conn.targetPort || null,
+          type: 'smoothstep',
+          animated: true,
+        } as FlowEdge;
+      });
 
     console.log('Template nodes:', nodes);
     console.log('Template edges:', edges);
@@ -141,7 +183,7 @@ export default function TemplatesModal() {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
       <div className="w-full max-w-4xl h-[600px] bg-card border border-border rounded-2xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Sidebar - Categories */}
-        <div className="w-52 bg-muted/30 border-r border-border flex flex-col">
+        <div className="w-55 bg-muted/30 border-r border-border flex flex-col">
           <div className="p-4 border-b border-border">
             <div className="flex items-center gap-2 mb-3">
               <LayoutTemplate className="w-5 h-5 text-primary" />
@@ -200,17 +242,16 @@ export default function TemplatesModal() {
               </button>
             ))}
 
-            {activeTab === 'community' && (
+            {activeTab === 'community' && !communityLoading && (
               <button
-                onClick={() => fetchCommunityTemplates()}
+                onClick={() => {
+                  clearCommunityTemplates();
+                  fetchCommunityTemplates();
+                }}
                 disabled={communityLoading}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 mt-2 rounded-lg text-xs text-muted-foreground hover:bg-muted transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 mt-2 rounded-lg text-xs text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
               >
-                {communityLoading ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-3.5 h-3.5" />
-                )}
+                <RefreshCw className="w-3.5 h-3.5" />
                 Refresh
               </button>
             )}
@@ -247,14 +288,26 @@ export default function TemplatesModal() {
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
                 <p className="text-muted-foreground">Loading community templates...</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {communityTemplates.length > 0 && `Loaded ${communityTemplates.length} so far...`}
+                </p>
               </div>
             ) : activeTab === 'community' && communityError ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
+              <div className="flex flex-col items-center justify-center h-full text-center px-8">
                 <Globe className="w-16 h-16 text-muted-foreground/30 mb-4" />
-                <p className="text-muted-foreground mb-2">Failed to load community templates</p>
-                <p className="text-xs text-muted-foreground mb-4">{communityError}</p>
+                <p className="text-muted-foreground mb-2 font-medium">Failed to load community templates</p>
+                <p className="text-xs text-muted-foreground mb-4 max-w-md">{communityError}</p>
+                {communityError.includes('not found') || communityError.includes('Invalid JSON') ? (
+                  <div className="text-xs text-muted-foreground/70 mb-4 max-w-md">
+                    <p className="mb-2">The ForgeFlow-Community repository may not be set up yet.</p>
+                    <p>Check: <code className="bg-muted px-1 py-0.5 rounded text-xs">github.com/OffLine911/ForgeFlow-community</code></p>
+                  </div>
+                ) : null}
                 <button
-                  onClick={() => fetchCommunityTemplates()}
+                  onClick={() => {
+                    clearCommunityTemplates();
+                    fetchCommunityTemplates();
+                  }}
                   className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
                 >
                   Try Again
@@ -264,14 +317,18 @@ export default function TemplatesModal() {
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <LayoutTemplate className="w-16 h-16 text-muted-foreground/30 mb-4" />
                 <p className="text-muted-foreground">
-                  {activeTab === 'community' ? 'No community templates available yet' : 'No templates found'}
+                  {activeTab === 'community' 
+                    ? 'No community templates available yet' 
+                    : searchQuery || selectedCategory 
+                      ? 'No templates match your search'
+                      : 'No templates found'}
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 {filteredTemplates.map((template) => (
                   <button
-                    key={template.id}
+                    key={`${activeTab}-${template.id}`}
                     onClick={() => handleSelectTemplate(template)}
                     className={cn(
                       'group relative flex flex-col p-4 rounded-xl border-2 text-left transition-all hover:scale-[1.02]',
@@ -293,8 +350,11 @@ export default function TemplatesModal() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2">{template.description}</p>
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      {template.nodes.length} nodes
+                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{template.nodes.length} nodes</span>
+                      {activeTab === 'community' && 'author' in template && template.author ? (
+                        <span className="truncate ml-2">by {String(template.author)}</span>
+                      ) : null}
                     </div>
                   </button>
                 ))}

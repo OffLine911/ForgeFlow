@@ -50,7 +50,7 @@ function SplashScreen() {
         </div>
 
         {/* Version */}
-        <p className="text-[#858585] text-xs font-medium mt-6">v0.1.0</p>
+        <p className="text-[#858585] text-xs font-medium mt-6">v0.2.7</p>
       </div>
     </div>
   );

@@ -25,6 +25,12 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
     try {
       const executions = await ListExecutions(100);
       
+      // Handle null or undefined response
+      if (!executions || !Array.isArray(executions)) {
+        set({ executions: [], isLoading: false });
+        return;
+      }
+      
       // Backend now provides nodeCount, successCount, errorCount
       const processedExecutions = executions.map((exec: any) => ({
         ...exec,
@@ -36,8 +42,7 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
       set({ executions: processedExecutions, isLoading: false });
     } catch (error) {
       console.error("Failed to load executions:", error);
-      toast.error("Failed to load executions");
-      set({ isLoading: false });
+      set({ executions: [], isLoading: false });
     }
   },
 

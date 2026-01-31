@@ -58,7 +58,7 @@ export default function StatusBar() {
             {activeFlow.name}
           </span>
         )}
-        <span>v0.1.0</span>
+        <span>v0.2.7</span>
       </div>
     </footer>
   );

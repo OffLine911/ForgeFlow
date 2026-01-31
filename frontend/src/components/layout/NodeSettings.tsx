@@ -1,4 +1,5 @@
 import { X, Settings, Info } from "lucide-react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { CronField, HotkeyField, FilePickerField, FolderPickerField } from "@/components/ui/fields";
 import { useFlowStore } from "@/stores/flowStore";
@@ -22,9 +23,35 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
   const definition = getNodeDefinition(data.nodeType || "");
   const hasFields = definition?.fields && definition.fields.length > 0;
 
+  // Fix isConfigured status on mount
+  useEffect(() => {
+    if (!definition) return;
+    
+    const requiredFields = definition.fields?.filter(f => f.required) || [];
+    const isConfigured = requiredFields.length === 0 || requiredFields.every(f => {
+      const val = config[f.key];
+      return val !== undefined && val !== null && val !== '';
+    });
+    
+    // Update if different from current status
+    if (data.isConfigured !== isConfigured) {
+      updateNodeData(selectedNode.id, { isConfigured });
+    }
+  }, [selectedNodeId]); // Run when node selection changes
+
   const handleConfigChange = (key: string, value: any) => {
+    const newConfig = { ...config, [key]: value };
+    
+    // Check if node is now configured
+    const requiredFields = definition?.fields?.filter(f => f.required) || [];
+    const isConfigured = requiredFields.length === 0 || requiredFields.every(f => {
+      const val = newConfig[f.key];
+      return val !== undefined && val !== null && val !== '';
+    });
+    
     updateNodeData(selectedNode.id, {
-      config: { ...config, [key]: value },
+      config: newConfig,
+      isConfigured,
     });
   };
 
@@ -105,6 +132,24 @@ export default function NodeSettings({ selectedNodeId, onClose }: NodeSettingsPr
                       onChange={(e) => handleConfigChange(field.key, e.target.value)}
                       placeholder={field.placeholder}
                       className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm transition-all"
+                    />
+                  )}
+                  {field.type === "url" && (
+                    <input
+                      type="url"
+                      value={String(config[field.key] ?? "")}
+                      onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                      placeholder={field.placeholder}
+                      className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm transition-all"
+                    />
+                  )}
+                  {field.type === "json" && (
+                    <textarea
+                      value={String(config[field.key] ?? "")}
+                      onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                      placeholder={field.placeholder}
+                      rows={3}
+                      className="w-full px-2 py-1.5 rounded-md border border-border bg-background text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm resize-vertical transition-all"
                     />
                   )}
                   {field.type === "textarea" && (
