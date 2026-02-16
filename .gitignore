@@ -43,6 +43,9 @@ yarn-error.log*
 # Wails
 wails.json.bak
 
+# Auto-generated
+frontend/src/version.ts
+
 AGENTS.md
 workflow-automator/
 docs/

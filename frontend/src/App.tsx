@@ -17,6 +17,7 @@ import { useWorkflowStore } from "@/stores/workflowStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { toast } from "@/stores/dialogStore";
 import { useEffect, useState } from "react";
+import { APP_VERSION } from "@/version";
 
 function SplashScreen() {
   return (
@@ -50,7 +51,7 @@ function SplashScreen() {
         </div>
 
         {/* Version */}
-        <p className="text-[#858585] text-xs font-medium mt-6">v0.2.7</p>
+        <p className="text-[#858585] text-xs font-medium mt-6">v{APP_VERSION}</p>
       </div>
     </div>
   );

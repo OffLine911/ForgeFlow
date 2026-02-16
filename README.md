@@ -42,6 +42,20 @@ wails build
 
 The binary will be in `build/bin/`.
 
+### Version Management
+
+To update the app version:
+
+1. Edit `version.json` and change the version number
+2. Run `node scripts/sync-version.js`
+
+This automatically updates:
+- `wails.json` (productVersion)
+- `frontend/package.json` (version)
+- `app.go` (version string)
+- `build/splash.html` (version display)
+- `frontend/src/version.ts` (auto-generated constant for React components)
+
 ## 🧩 Node Types
 
 ### Triggers

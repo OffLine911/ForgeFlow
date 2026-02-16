@@ -10,9 +10,25 @@ import (
 )
 
 func (as *ActionService) ShowNotification(title, message string) error {
-	script := fmt.Sprintf(`display notification "%s" with title "%s"`, message, title)
+	// Try terminal-notifier first (more reliable if installed)
+	if _, err := exec.LookPath("terminal-notifier"); err == nil {
+		cmd := exec.Command("terminal-notifier", "-title", title, "-message", message, "-sound", "default")
+		if err := cmd.Run(); err == nil {
+			return nil
+		}
+	}
+
+	// Fallback to osascript with better error handling
+	script := fmt.Sprintf(`display notification "%s" with title "%s" sound name "default"`, message, title)
 	cmd := exec.Command("osascript", "-e", script)
-	return cmd.Run()
+	
+	// Run and capture any errors
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("notification failed: %v (output: %s)", err, string(output))
+	}
+	
+	return nil
 }
 
 func (as *ActionService) OpenURL(url string) error {
