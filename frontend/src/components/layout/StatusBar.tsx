@@ -1,7 +1,7 @@
 import { useFlowStore } from "@/stores/flowStore";
 import { Circle, Activity, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { APP_VERSION } from "@/version";
+import { APP_VERSION } from "../../version";
 
 export default function StatusBar() {
   const { nodes, edges, activeFlowId, flows, isRunning } = useFlowStore();

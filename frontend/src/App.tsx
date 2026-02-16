@@ -17,7 +17,7 @@ import { useWorkflowStore } from "@/stores/workflowStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { toast } from "@/stores/dialogStore";
 import { useEffect, useState } from "react";
-import { APP_VERSION } from "@/version";
+import { APP_VERSION } from "./version";
 
 function SplashScreen() {
   return (
