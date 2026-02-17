@@ -2,6 +2,8 @@ import { useState } from "react";
 import { X, Upload, Download, FileJson, AlertCircle } from "lucide-react";
 import { useFlowStore } from "@/stores/flowStore";
 import { ExportFlow, ImportFlow } from "../../../wailsjs/go/main/Storage";
+import type { FlowNode, FlowEdge, NodeData } from "@/types/flow";
+import { nodeDefinitions } from "@/nodes";
 
 interface ImportExportProps {
   onClose: () => void;
@@ -79,12 +81,89 @@ export default function ImportExport({ onClose }: ImportExportProps) {
       if (!flow.nodes || !Array.isArray(flow.nodes)) {
         throw new Error("Invalid flow format: missing nodes array");
       }
-      if (!flow.edges || !Array.isArray(flow.edges)) {
-        throw new Error("Invalid flow format: missing edges array");
+      
+      // Support both formats: edges (exported flows) and connections (community templates)
+      const hasEdges = flow.edges && Array.isArray(flow.edges);
+      const hasConnections = flow.connections && Array.isArray(flow.connections);
+      
+      if (!hasEdges && !hasConnections) {
+        throw new Error("Invalid flow format: missing edges or connections array");
+      }
+      
+      // Convert connections to edges if needed (community template format)
+      if (hasConnections && !hasEdges) {
+        // Helper to check if node is configured
+        const isNodeConfigured = (nodeType: string, config: Record<string, any>): boolean => {
+          const nodeDef = nodeDefinitions.find(n => n.type === nodeType);
+          if (!nodeDef?.fields) return true;
+          
+          const requiredFields = nodeDef.fields.filter(f => f.required);
+          if (requiredFields.length === 0) return true;
+          
+          return requiredFields.every(f => {
+            const value = config[f.key];
+            return value !== undefined && value !== null && value !== '';
+          });
+        };
+
+        // Convert template nodes to FlowNodes
+        const nodes: FlowNode[] = flow.nodes.map((templateNode: any, index: number) => {
+          const nodeDef = nodeDefinitions.find(n => n.type === templateNode.type);
+          const category = nodeDef?.category || 'action';
+          const label = nodeDef?.name || templateNode.type;
+          const icon = nodeDef?.icon || 'play';
+          
+          const config = { ...nodeDef?.defaultData, ...templateNode.data };
+
+          const nodeData: NodeData = {
+            label,
+            category,
+            icon,
+            description: nodeDef?.description || '',
+            status: 'idle',
+            nodeType: templateNode.type,
+            config,
+            isConfigured: isNodeConfigured(templateNode.type, config),
+          };
+
+          return {
+            id: templateNode.id || `node-${index}-${Date.now()}`,
+            type: 'custom',
+            position: templateNode.position,
+            data: nodeData,
+          };
+        });
+
+        // Convert template connections to FlowEdges
+        const edges: FlowEdge[] = flow.connections
+          .filter((conn: any) => {
+            const sourceNode = nodes[conn.sourceIndex];
+            const targetNode = nodes[conn.targetIndex];
+            return sourceNode && targetNode;
+          })
+          .map((conn: any, index: number) => {
+            const sourceNode = nodes[conn.sourceIndex];
+            const targetNode = nodes[conn.targetIndex];
+            
+            return {
+              id: `edge-${index}-${Date.now()}`,
+              source: sourceNode.id,
+              target: targetNode.id,
+              sourceHandle: conn.sourcePort || null,
+              targetHandle: conn.targetPort || null,
+              type: 'smoothstep',
+              animated: true,
+            };
+          });
+
+        // Replace with converted format
+        flow.nodes = nodes;
+        flow.edges = edges;
+        delete flow.connections;
       }
       
       // Import flow
-      const newFlowId = await ImportFlow(text);
+      const newFlowId = await ImportFlow(JSON.stringify(flow));
       
       setSuccess(`Imported "${flow.name || 'Untitled Flow'}" successfully`);
       setTimeout(() => {

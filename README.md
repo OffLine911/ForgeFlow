@@ -16,6 +16,7 @@ ForgeFlow is a privacy-first desktop automation engine that lets you build visua
 - 🔒 **Privacy-First** - All data stays local, no cloud required
 - ⚡ **Fast & Lightweight** - Built with Go + React, minimal resource usage
 - 🌙 **Dark Mode** - Beautiful dark UI by default
+- 🌍 **Community Templates** - Browse and share workflows at [ForgeFlow-community](https://github.com/OffLine911/ForgeFlow-community)
 
 ## 🚀 Quick Start
 
@@ -199,7 +200,7 @@ ForgeFlow/
 - [x] Background trigger activation (auto-start on app launch)
 - [x] **Undo/Redo** (Ctrl+Z / Ctrl+Y) with 50-step history
 - [x] **Copy/Paste nodes** (Ctrl+C / Ctrl+V)
-- [x] **Community Templates** (fetch & import from GitHub)
+- [x] **Community Templates** (fetch & import from GitHub - [submit yours here](https://github.com/OffLine911/ForgeFlow-community))
 - [x] **Custom Node Builder** (create your own nodes with shell/HTTP/JavaScript)
 
 ### 📋 Planned

@@ -89,6 +89,7 @@ function UnifiedNode({ data, selected }: FlowNodeProps) {
             type="target"
             position={Position.Left}
             id="in"
+            isConnectable={Infinity}
             className="!w-2 !h-2 !bg-muted !border !border-foreground/30"
           />
         )}
@@ -129,6 +130,7 @@ function UnifiedNode({ data, selected }: FlowNodeProps) {
           type="source"
           position={Position.Right}
           id="out"
+          isConnectable={Infinity}
           className="!w-2 !h-2 !bg-muted !border !border-foreground/30"
         />
       </div>
