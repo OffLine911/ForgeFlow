@@ -8,6 +8,7 @@ import {
   ConnectionLineType,
   MarkerType,
   useReactFlow,
+  ConnectionMode,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Copy, Trash2, Network } from "lucide-react";
@@ -215,6 +216,7 @@ export default function FlowCanvas() {
         defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
         style={{ background: "#0d0d0d" }}
         proOptions={{ hideAttribution: true }}
+        connectionMode={ConnectionMode.Loose}
       >
         <Background
           variant={BackgroundVariant.Dots}
