@@ -4,7 +4,10 @@
 
 ForgeFlow is a privacy-first desktop automation engine that lets you build visual automations, run AI-powered actions, and keep your data 100% on-device.
 
-<!-- ![ForgeFlow Screenshot](screenshots/screenshot01.png) -->
+**Current Version:** v0.3.1
+
+![ForgeFlow Screenshot](screenshots/screenshot01.png)
+![ForgeFlow Screenshot](screenshots/screenshot02.png)
 
 ## ✨ Features
 
@@ -31,6 +34,15 @@ cd ForgeFlow
 
 # Run in development mode (hot reload)
 wails dev
+
+# Frontend only development
+cd frontend && npm run dev
+
+# Type check frontend
+cd frontend && npx tsc --noEmit
+
+# Go build check
+go build
 ```
 
 ### Build
@@ -38,6 +50,9 @@ wails dev
 ```bash
 # Build production binary
 wails build
+
+# Frontend build only
+cd frontend && npm run build
 ```
 
 The binary will be in `build/bin/`.
@@ -59,19 +74,49 @@ This automatically updates:
 ## 🧩 Node Types
 
 ### Triggers
-- **File Trigger** - React to file changes
-- **Schedule** - Cron or interval-based
-- **Webhook** - HTTP receiver
-- **Manual** - Button press
-- **System** - App/process events
+- **Manual** - Button press to start workflow
+- **Schedule** - Cron or interval-based execution
+- **Webhook** - HTTP receiver endpoint
+- **File Watcher** - React to file system changes
+- **Clipboard** - Monitor clipboard changes
+- **Hotkey** - Global keyboard shortcuts
+- **Startup** - Run on app launch
+- **Telegram** - Telegram bot integration
 
 ### Actions
-- **File Ops** - Move, rename, delete files
-- **HTTP Request** - Call external APIs
-- **Shell Command** - Run system commands (sandboxed)
-- **Notify** - Desktop notifications
+- **File Operations** - Read, write, append, copy, move, delete, list, get info
+- **HTTP Request** - GET, POST, PUT, DELETE with headers and body
+- **Shell/Script** - Run commands with arguments and working directory
+- **Desktop Notifications** - Windows toast notifications (macOS planned)
+- **Zip** - Compress and extract archives
+- **Excel** - Write to Excel files
+
+### Conditions
+- **If/Else** - Conditional branching
+- **Switch** - Multi-way branching
+- **Filter** - Filter arrays/objects
+- **Type Check** - Validate data types
+- **isEmpty** - Check for empty values
+
+### Loops
+- **forEach** - Iterate over arrays
+- **Repeat** - Execute N times
+- **While** - Loop with condition
+
+### Utilities
+- **JSON** - Parse and stringify
+- **Regex** - Pattern matching
+- **Math** - Mathematical operations
+- **CSV** - Parse and generate CSV
+- **Date/Time** - Date manipulation
+- **Variables** - Store and retrieve data with {{template}} syntax
+- **Error Handling** - Try/catch with continueOnError
 
 ### AI Actions
+- **Ollama** - Local LLM integration (auto-detect models)
+- **OpenAI** - GPT models via API
+- **Groq** - Fast inference API
+- **OpenRouter** - Multi-provider AI gateway
 - **Summarize** - AI-powered summaries
 - **Classify** - Categorize content
 - **Extract** - Pull out entities/data
@@ -96,15 +141,26 @@ This automatically updates:
 
 ```
 ForgeFlow/
-├── frontend/           # React frontend
+├── frontend/                 # React frontend
 │   ├── src/
-│   │   ├── components/ # UI components
-│   │   ├── stores/     # Zustand stores
-│   │   └── types/      # TypeScript types
-├── main.go             # App entry point
-├── app.go              # App utilities
-├── engine.go           # Execution engine
-└── storage.go          # Persistence
+│   │   ├── components/
+│   │   │   ├── flow/        # Flow editor components
+│   │   │   ├── layout/      # Layout components (Header, Sidebar, StatusBar)
+│   │   │   └── ui/          # Reusable UI components & specialized fields
+│   │   ├── stores/          # Zustand stores (flow, execution, settings, etc.)
+│   │   ├── types/           # TypeScript types
+│   │   ├── nodes/           # Node definitions
+│   │   ├── handlers/        # Node execution handlers
+│   │   ├── executor/        # Workflow execution engine
+│   │   └── data/templates/  # Workflow templates
+│   └── wailsjs/             # Auto-generated Wails bindings
+├── build/                    # Wails build assets
+├── main.go                   # Wails app entry point
+├── app.go                    # App service (dialogs, utils)
+├── engine.go                 # Automation execution engine
+├── storage.go                # Flow persistence service
+├── actions.go                # Platform-specific actions
+└── excel.go                  # Excel file operations
 ```
 
 ## 🗺️ Roadmap
@@ -148,7 +204,9 @@ ForgeFlow/
 
 ### 📋 Planned
 - [ ] System tray with background running
-- [ ] Global hotkey listener
+- [ ] SQLite storage (currently using JSON files)
+- [ ] More AI providers
+- [ ] Plugin system for custom integrations
 
 ## 📄 License
 
