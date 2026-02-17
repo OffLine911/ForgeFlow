@@ -207,7 +207,7 @@ export default function FlowCanvas() {
         nodesDraggable={!isRunning}
         nodesConnectable={!isRunning}
         elementsSelectable={!isRunning}
-        deleteKeyCode={["Backspace", "Delete"]}
+        deleteKeyCode={null}
         snapToGrid
         snapGrid={[16, 16]}
         minZoom={0.2}

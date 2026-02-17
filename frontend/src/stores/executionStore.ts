@@ -57,25 +57,57 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
   },
 
   deleteExecution: async (execId: string) => {
+    if (!execId || execId.trim() === '') {
+      console.warn('Invalid execution ID provided for deletion');
+      return;
+    }
+    
+    const { executions, selectedExecution } = get();
+    const execution = executions.find(e => e.id === execId);
+    
+    if (!execution) {
+      console.warn(`Execution ${execId} not found, may have already been deleted`);
+      toast.warning('Execution not found', 'It may have already been deleted');
+      return;
+    }
+    
     try {
       await DeleteExecution(execId);
-      set({ executions: get().executions.filter(e => e.id !== execId) });
+      set({ 
+        executions: executions.filter(e => e.id !== execId),
+        selectedExecution: selectedExecution?.id === execId ? null : selectedExecution,
+      });
       toast.success("Execution deleted");
     } catch (error) {
       console.error("Failed to delete execution:", error);
-      toast.error("Failed to delete execution");
+      toast.error("Failed to delete execution", error instanceof Error ? error.message : 'Unknown error');
+      throw error;
     }
   },
 
   clearExecutions: async () => {
     const { executions } = get();
+    
+    if (executions.length === 0) {
+      console.log('No executions to clear');
+      return;
+    }
+    
     try {
-      await Promise.all(executions.map(e => DeleteExecution(e.id)));
-      set({ executions: [] });
+      const deletePromises = executions.map(e => 
+        DeleteExecution(e.id).catch(err => {
+          console.error(`Failed to delete execution ${e.id}:`, err);
+          return null;
+        })
+      );
+      
+      await Promise.all(deletePromises);
+      set({ executions: [], selectedExecution: null });
       toast.success("All executions cleared");
     } catch (error) {
       console.error("Failed to clear executions:", error);
-      toast.error("Failed to clear executions");
+      toast.error("Failed to clear executions", error instanceof Error ? error.message : 'Unknown error');
+      throw error;
     }
   },
 

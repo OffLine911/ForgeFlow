@@ -136,9 +136,11 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
 
       copyNode: (nodeId) => {
         const node = get().nodes.find((n) => n.id === nodeId);
-        if (node) {
-          set({ clipboard: JSON.parse(JSON.stringify(node)) });
+        if (!node) {
+          console.warn(`Node ${nodeId} not found, cannot copy`);
+          return;
         }
+        set({ clipboard: JSON.parse(JSON.stringify(node)) });
       },
 
       pasteNode: () => {
@@ -159,18 +161,20 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
 
       duplicateNode: (nodeId) => {
         const node = get().nodes.find((n) => n.id === nodeId);
-        if (node) {
-          get().pushHistory();
-          const newNode: FlowNode = {
-            ...JSON.parse(JSON.stringify(node)),
-            id: crypto.randomUUID(),
-            position: {
-              x: node.position.x + 50,
-              y: node.position.y + 50,
-            },
-          };
-          set({ nodes: [...get().nodes, newNode] });
+        if (!node) {
+          console.warn(`Node ${nodeId} not found, cannot duplicate`);
+          return;
         }
+        get().pushHistory();
+        const newNode: FlowNode = {
+          ...JSON.parse(JSON.stringify(node)),
+          id: crypto.randomUUID(),
+          position: {
+            x: node.position.x + 50,
+            y: node.position.y + 50,
+          },
+        };
+        set({ nodes: [...get().nodes, newNode] });
       },
 
       onNodesChange: (changes) => {
@@ -216,16 +220,37 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
       },
 
       removeNode: (nodeId) => {
+        const { nodes, edges } = get();
+        
+        // Check if node exists before removing
+        const nodeExists = nodes.some((n) => n.id === nodeId);
+        if (!nodeExists) {
+          console.warn(`Node ${nodeId} not found, skipping removal`);
+          return;
+        }
+        
         get().pushHistory();
+        
+        // Remove node and connected edges
+        const newNodes = nodes.filter((n) => n.id !== nodeId);
+        const newEdges = edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
+        
         set({
-          nodes: get().nodes.filter((n) => n.id !== nodeId),
-          edges: get().edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
+          nodes: newNodes,
+          edges: newEdges,
+          selectedNodeId: get().selectedNodeId === nodeId ? null : get().selectedNodeId,
         });
       },
 
       updateNodeData: (nodeId, data) => {
+        const { nodes } = get();
+        const nodeExists = nodes.some((n) => n.id === nodeId);
+        if (!nodeExists) {
+          console.warn(`Node ${nodeId} not found, cannot update data`);
+          return;
+        }
         set({
-          nodes: get().nodes.map((node) =>
+          nodes: nodes.map((node) =>
             node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node
           ),
         });
@@ -366,13 +391,24 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
 
       loadFlow: async (flowId) => {
         const { addLog } = get();
+        
+        if (!flowId || flowId.trim() === '') {
+          console.warn('Invalid flow ID provided');
+          return;
+        }
+        
         try {
           addLog(`📂 Loading flow...`);
           const flowJSON = await LoadFlow(flowId);
+          
+          if (!flowJSON) {
+            throw new Error('Empty response from server');
+          }
+          
           const flow: Flow = JSON.parse(flowJSON);
           
           if (!flow.nodes || !flow.edges) {
-            throw new Error('Invalid flow data');
+            throw new Error('Invalid flow data - missing nodes or edges');
           }
           
           addLog(`✅ Flow loaded: ${flow.name}`);
@@ -381,6 +417,7 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
             nodes: flow.nodes,
             edges: flow.edges,
             activeFlowId: flowId,
+            selectedNodeId: null, // Clear selection when loading new flow
           });
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
@@ -394,11 +431,23 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
       deleteFlow: async (flowId) => {
         const { flows, activeFlowId, addLog } = get();
         
+        if (!flowId || flowId.trim() === '') {
+          console.warn('Invalid flow ID provided for deletion');
+          return;
+        }
+        
         const flow = flows.find(f => f.id === flowId);
-        const flowName = flow?.name || 'Unknown';
+        
+        if (!flow) {
+          console.warn(`Flow ${flowId} not found, cannot delete`);
+          toast.warning('Flow not found', 'The flow may have already been deleted');
+          return;
+        }
+        
+        const flowName = flow.name || 'Unknown';
         
         // Unregister triggers before deleting
-        if (flow && flow.nodes && flow.nodes.length > 0) {
+        if (flow.nodes && flow.nodes.length > 0) {
           try {
             const { TriggerService } = await import('@/services/triggerService');
             await TriggerService.unregisterWorkflowTriggers(flowId, flow.nodes);
@@ -415,7 +464,12 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
           
           set({
             flows: flows.filter((f) => f.id !== flowId),
-            ...(activeFlowId === flowId && { nodes: [], edges: [], activeFlowId: null }),
+            ...(activeFlowId === flowId && { 
+              nodes: [], 
+              edges: [], 
+              activeFlowId: null,
+              selectedNodeId: null, // Clear selection when deleting active flow
+            }),
           });
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
@@ -565,10 +619,23 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
       },
 
       stopFlow: async () => {
-        const { executionId, executor } = get();
-        if (executor) {
-          executor.abort();
+        const { executionId, executor, addLog, isRunning } = get();
+        
+        if (!isRunning) {
+          console.warn('No flow is currently running');
+          return;
         }
+        
+        addLog('⏹️  Stopping flow execution...');
+        
+        if (executor) {
+          try {
+            executor.abort();
+          } catch (error) {
+            console.error("Failed to abort executor:", error);
+          }
+        }
+        
         if (executionId) {
           try {
             await StopExecution(executionId);
@@ -576,6 +643,8 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
             console.error("Failed to stop execution:", error);
           }
         }
+        
+        addLog('✅ Flow execution stopped');
         set({ isRunning: false, executionId: null, executor: null });
       },
 

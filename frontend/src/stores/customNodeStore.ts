@@ -60,8 +60,16 @@ export const useCustomNodeStore = create<CustomNodeState>()(
       },
 
       updateCustomNode: (type, updates) => {
+        const { customNodes } = get();
+        const nodeExists = customNodes.some((n) => n.type === type);
+        
+        if (!nodeExists) {
+          console.warn(`Custom node ${type} not found, cannot update`);
+          return;
+        }
+        
         set({
-          customNodes: get().customNodes.map((n) =>
+          customNodes: customNodes.map((n) =>
             n.type === type
               ? { ...n, ...updates, updatedAt: new Date().toISOString() }
               : n
@@ -70,22 +78,34 @@ export const useCustomNodeStore = create<CustomNodeState>()(
       },
 
       deleteCustomNode: (type) => {
-        set({ customNodes: get().customNodes.filter((n) => n.type !== type) });
+        const { customNodes } = get();
+        const nodeExists = customNodes.some((n) => n.type === type);
+        
+        if (!nodeExists) {
+          console.warn(`Custom node ${type} not found, cannot delete`);
+          return;
+        }
+        
+        set({ customNodes: customNodes.filter((n) => n.type !== type) });
       },
 
       duplicateCustomNode: (type) => {
         const node = get().customNodes.find((n) => n.type === type);
-        if (node) {
-          const now = new Date().toISOString();
-          const newNode: CustomNodeDefinition = {
-            ...node,
-            type: `${node.type}_copy_${Date.now()}`,
-            name: `${node.name} (Copy)`,
-            createdAt: now,
-            updatedAt: now,
-          };
-          set({ customNodes: [...get().customNodes, newNode] });
+        
+        if (!node) {
+          console.warn(`Custom node ${type} not found, cannot duplicate`);
+          return;
         }
+        
+        const now = new Date().toISOString();
+        const newNode: CustomNodeDefinition = {
+          ...node,
+          type: `${node.type}_copy_${Date.now()}`,
+          name: `${node.name} (Copy)`,
+          createdAt: now,
+          updatedAt: now,
+        };
+        set({ customNodes: [...get().customNodes, newNode] });
       },
     }),
     {

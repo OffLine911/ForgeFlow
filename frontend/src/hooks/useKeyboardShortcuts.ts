@@ -47,8 +47,14 @@ export function useKeyboardShortcuts() {
       // Delete/Backspace - delete selected node
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNodeId) {
         e.preventDefault();
-        removeNode(selectedNodeId);
-        setSelectedNodeId(null);
+        const nodeExists = nodes.some((n) => n.id === selectedNodeId);
+        if (nodeExists) {
+          removeNode(selectedNodeId);
+          setSelectedNodeId(null);
+        } else {
+          console.warn('Selected node no longer exists');
+          setSelectedNodeId(null);
+        }
         return;
       }
 
@@ -87,6 +93,9 @@ export function useKeyboardShortcuts() {
           };
           addNode(newNode);
           setSelectedNodeId(newNode.id);
+        } else {
+          console.warn('Selected node no longer exists');
+          setSelectedNodeId(null);
         }
         return;
       }
@@ -119,7 +128,13 @@ export function useKeyboardShortcuts() {
       // Ctrl+C - copy selected node
       if (isMod && e.key === 'c' && selectedNodeId) {
         e.preventDefault();
-        copyNode(selectedNodeId);
+        const nodeExists = nodes.some((n) => n.id === selectedNodeId);
+        if (nodeExists) {
+          copyNode(selectedNodeId);
+        } else {
+          console.warn('Selected node no longer exists');
+          setSelectedNodeId(null);
+        }
         return;
       }
 

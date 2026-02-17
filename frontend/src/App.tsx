@@ -18,6 +18,7 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import { toast } from "@/stores/dialogStore";
 import { useEffect, useState } from "react";
 import { APP_VERSION } from "./version";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 function SplashScreen() {
   return (
@@ -73,6 +74,9 @@ export default function App() {
   const { executionHistoryOpen, setExecutionHistoryOpen, importExportOpen, setImportExportOpen } = useWorkflowStore();
   const { loadSettings, applyTheme } = useSettingsStore();
   const [isLoading, setIsLoading] = useState(true);
+
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts();
 
   const activeFlow = flows.find((f) => f.id === activeFlowId);
 
