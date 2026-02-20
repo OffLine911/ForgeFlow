@@ -4,8 +4,6 @@
 
 ForgeFlow is a privacy-first desktop automation engine that lets you build visual automations, run AI-powered actions, and keep your data 100% on-device.
 
-**Current Version:** v0.3.1
-
 ![ForgeFlow Screenshot](screenshots/screenshot01.png)
 ![ForgeFlow Screenshot](screenshots/screenshot02.png)
 
