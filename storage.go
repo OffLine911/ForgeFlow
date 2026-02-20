@@ -42,7 +42,9 @@ func (s *Storage) getFlowsDir() string {
 }
 
 func (s *Storage) SaveFlow(flowJSON string) (string, error) {
-	s.Init()
+	if err := s.Init(); err != nil {
+		return "", err
+	}
 
 	// Parse as generic map to avoid struct issues
 	var flowData map[string]interface{}
@@ -74,7 +76,9 @@ func (s *Storage) SaveFlow(flowJSON string) (string, error) {
 }
 
 func (s *Storage) LoadFlow(flowID string) (string, error) {
-	s.Init()
+	if err := s.Init(); err != nil {
+		return "", err
+	}
 
 	filePath := filepath.Join(s.getFlowsDir(), flowID+".json")
 	data, err := os.ReadFile(filePath)
@@ -89,7 +93,9 @@ func (s *Storage) GetFlow(flowID string) (string, error) {
 }
 
 func (s *Storage) ListFlows() ([]map[string]interface{}, error) {
-	s.Init()
+	if err := s.Init(); err != nil {
+		return nil, err
+	}
 
 	flowsDir := s.getFlowsDir()
 	entries, err := os.ReadDir(flowsDir)
@@ -142,19 +148,25 @@ func (s *Storage) ListFlows() ([]map[string]interface{}, error) {
 }
 
 func (s *Storage) DeleteFlow(flowID string) error {
-	s.Init()
+	if err := s.Init(); err != nil {
+		return err
+	}
 	filePath := filepath.Join(s.getFlowsDir(), flowID+".json")
 	return os.Remove(filePath)
 }
 
 func (s *Storage) SaveSettings(settingsJSON string) error {
-	s.Init()
+	if err := s.Init(); err != nil {
+		return err
+	}
 	filePath := filepath.Join(s.dataDir, "settings.json")
 	return os.WriteFile(filePath, []byte(settingsJSON), 0644)
 }
 
 func (s *Storage) LoadSettings() (string, error) {
-	s.Init()
+	if err := s.Init(); err != nil {
+		return "", err
+	}
 	filePath := filepath.Join(s.dataDir, "settings.json")
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -170,7 +182,9 @@ func (s *Storage) getExecutionsDir() string {
 }
 
 func (s *Storage) SaveExecution(executionJSON string) error {
-	s.Init()
+	if err := s.Init(); err != nil {
+		return err
+	}
 
 	var execution map[string]interface{}
 	if err := json.Unmarshal([]byte(executionJSON), &execution); err != nil {
@@ -192,7 +206,9 @@ func (s *Storage) SaveExecution(executionJSON string) error {
 }
 
 func (s *Storage) ListExecutions(limit int) ([]map[string]interface{}, error) {
-	s.Init()
+	if err := s.Init(); err != nil {
+		return nil, err
+	}
 
 	execDir := s.getExecutionsDir()
 	entries, err := os.ReadDir(execDir)
@@ -260,9 +276,23 @@ func (s *Storage) ListExecutions(limit int) ([]map[string]interface{}, error) {
 }
 
 func (s *Storage) DeleteExecution(execID string) error {
-	s.Init()
+	if err := s.Init(); err != nil {
+		return err
+	}
 	filePath := filepath.Join(s.getExecutionsDir(), execID+".json")
 	return os.Remove(filePath)
+}
+
+func (s *Storage) LoadExecution(execID string) (string, error) {
+	if err := s.Init(); err != nil {
+		return "", err
+	}
+	filePath := filepath.Join(s.getExecutionsDir(), execID+".json")
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", fmt.Errorf("execution not found: %s", execID)
+	}
+	return string(data), nil
 }
 
 func (s *Storage) ExportFlow(flowID string) (string, error) {
@@ -270,6 +300,10 @@ func (s *Storage) ExportFlow(flowID string) (string, error) {
 }
 
 func (s *Storage) ImportFlow(flowJSON string) (string, error) {
+	if err := s.Init(); err != nil {
+		return "", err
+	}
+
 	var flow Flow
 	if err := json.Unmarshal([]byte(flowJSON), &flow); err != nil {
 		return "", fmt.Errorf("invalid flow JSON: %w", err)

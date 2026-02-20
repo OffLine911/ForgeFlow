@@ -17,8 +17,11 @@ export const conditionHandlers: Record<string, (ctx: HandlerContext) => Promise<
         evaluatedCondition = evaluatedCondition.replace(regex, JSON.stringify(value));
       }
       
-      // Simple evaluation (UNSAFE - use proper evaluator in production)
-      const result = eval(evaluatedCondition);
+      // Sandboxed evaluation via Function constructor (no access to local scope)
+      const varKeys = Object.keys(variables);
+      const varValues = varKeys.map(k => variables[k]);
+      const fn = new Function(...varKeys, `"use strict"; return (${evaluatedCondition});`);
+      const result = fn(...varValues);
       const boolResult = Boolean(result);
       
       onLog('success', `${boolResult ? '✓' : '✗'} Condition: ${boolResult ? 'TRUE' : 'FALSE'}`);

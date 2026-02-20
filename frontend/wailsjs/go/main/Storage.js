@@ -38,6 +38,10 @@ export function ListFlows() {
   return window['go']['main']['Storage']['ListFlows']();
 }
 
+export function LoadExecution(arg1) {
+  return window['go']['main']['Storage']['LoadExecution'](arg1);
+}
+
 export function LoadFlow(arg1) {
   return window['go']['main']['Storage']['LoadFlow'](arg1);
 }

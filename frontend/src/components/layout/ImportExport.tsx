@@ -294,7 +294,7 @@ export default function ImportExport({ onClose }: ImportExportProps) {
                           {flow.name}
                         </div>
                         <div className="text-xs text-[#858585]">
-                          {flow.nodes.length} nodes • Updated {new Date(flow.updatedAt).toLocaleDateString()}
+                          {(flow as any).nodeCount ?? flow.nodes.length} nodes • Updated {new Date(flow.updatedAt).toLocaleDateString()}
                         </div>
                       </div>
                     </div>

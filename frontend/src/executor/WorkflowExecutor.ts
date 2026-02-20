@@ -24,6 +24,7 @@ export class WorkflowExecutor {
   private onProgress: (results: NodeResult[]) => void;
   private onLog: LogCallback;
   private isAborted: boolean = false;
+  private executingStack: Set<string> = new Set();
 
   constructor(
     nodes: FlowNode[],
@@ -86,6 +87,12 @@ export class WorkflowExecutor {
     const node = this.nodes.find(n => n.id === nodeId);
     if (!node) return null;
 
+    // Cycle detection: skip if this node is already on the call stack
+    if (this.executingStack.has(nodeId)) {
+      this.onLog('warn', `⚠️ Cycle detected at: ${node.data.label}, skipping`, nodeId);
+      return null;
+    }
+
     // Check if disabled (using config.disabled instead of status)
     if (node.data.config?.disabled === true) {
       this.updateNodeResult(nodeId, {
@@ -106,6 +113,7 @@ export class WorkflowExecutor {
     // Execute node
     this.onLog('info', `▶️  Executing: ${node.data.label}`, nodeId);
     this.updateNodeResult(nodeId, { status: 'running', startedAt: Date.now() });
+    this.executingStack.add(nodeId);
 
     try {
       const output = await this.runNode(node);
@@ -191,8 +199,10 @@ export class WorkflowExecutor {
           
           let result = false;
           try {
-            // Note: Simple eval for now. In production, use a safe evaluator.
-            result = !!eval(currentCondition);
+            const varKeys = Object.keys(this.variables);
+            const varValues = varKeys.map(k => this.variables[k]);
+            const fn = new Function(...varKeys, `"use strict"; return (${currentCondition});`);
+            result = !!fn(...varValues);
           } catch (e) {
             this.onLog('error', `❌ Loop condition error: ${e}`, nodeId);
             break;
@@ -397,6 +407,8 @@ export class WorkflowExecutor {
       });
       this.onLog('error', `❌ Failed: ${node.data.label} - ${errorMsg}`, nodeId);
       throw error;
+    } finally {
+      this.executingStack.delete(nodeId);
     }
   }
 

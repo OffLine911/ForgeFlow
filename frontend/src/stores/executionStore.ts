@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { FlowExecution } from "@/types/flow";
-import { ListExecutions, DeleteExecution, SaveExecution } from "../../wailsjs/go/main/Storage";
+import { ListExecutions, DeleteExecution, SaveExecution, LoadExecution } from "../../wailsjs/go/main/Storage";
 import { toast } from "@/stores/dialogStore";
 
 interface ExecutionState {
@@ -111,5 +111,18 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
     }
   },
 
-  setSelectedExecution: (execution) => set({ selectedExecution: execution }),
+  setSelectedExecution: async (execution) => {
+    if (!execution) {
+      set({ selectedExecution: null });
+      return;
+    }
+    // Load full execution data (with results) from storage
+    try {
+      const fullJSON = await LoadExecution(execution.id);
+      const full = JSON.parse(fullJSON) as FlowExecution;
+      set({ selectedExecution: full });
+    } catch {
+      set({ selectedExecution: execution });
+    }
+  },
 }));

@@ -19,6 +19,8 @@ export function ListExecutions(arg1:number):Promise<Array<Record<string, any>>>;
 
 export function ListFlows():Promise<Array<Record<string, any>>>;
 
+export function LoadExecution(arg1:string):Promise<string>;
+
 export function LoadFlow(arg1:string):Promise<string>;
 
 export function LoadSettings():Promise<string>;

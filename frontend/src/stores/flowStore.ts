@@ -446,14 +446,17 @@ export const useFlowStore = create<FlowState>()((set, get) => ({
         
         const flowName = flow.name || 'Unknown';
         
-        // Unregister triggers before deleting
-        if (flow.nodes && flow.nodes.length > 0) {
-          try {
+        // Load full flow data to get nodes for trigger unregistration
+        try {
+          const { LoadFlow } = await import('../../wailsjs/go/main/Storage');
+          const fullFlowJSON = await LoadFlow(flowId);
+          const fullFlow = JSON.parse(fullFlowJSON);
+          if (fullFlow.nodes && fullFlow.nodes.length > 0) {
             const { TriggerService } = await import('@/services/triggerService');
-            await TriggerService.unregisterWorkflowTriggers(flowId, flow.nodes);
-          } catch (error) {
-            console.error('Failed to unregister triggers:', error);
+            await TriggerService.unregisterWorkflowTriggers(flowId, fullFlow.nodes);
           }
+        } catch (error) {
+          console.error('Failed to unregister triggers:', error);
         }
         
         try {

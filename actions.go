@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -240,7 +241,11 @@ func (as *ActionService) Extract(src, dest string) error {
 	os.MkdirAll(dest, 0755)
 
 	for _, f := range r.File {
+		// Prevent Zip Slip: ensure resolved path stays within dest
 		path := filepath.Join(dest, f.Name)
+		if !strings.HasPrefix(filepath.Clean(path), filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("illegal file path in archive: %s", f.Name)
+		}
 		if f.FileInfo().IsDir() {
 			os.MkdirAll(path, f.Mode())
 			continue

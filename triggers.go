@@ -132,6 +132,7 @@ func (tm *TriggerManager) RegisterWebhookTrigger(flowID, path, method string) er
 
 	// Start HTTP server if not already running
 	if tm.httpServer == nil {
+		tm.httpServer = &http.Server{Addr: ":8080"}
 		go tm.startWebhookServer()
 	}
 
@@ -377,10 +378,7 @@ func (tm *TriggerManager) startWebhookServer() {
 		})
 	})
 
-	tm.httpServer = &http.Server{
-		Addr:    ":8080",
-		Handler: mux,
-	}
+	tm.httpServer.Handler = mux
 
 	fmt.Println("Webhook server started on :8080")
 	if err := tm.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -473,6 +471,10 @@ func (tm *TriggerManager) StartAllTriggers() error {
 				}
 			case "trigger_clipboard":
 				tm.RegisterClipboardMonitor(flowID, true)
+			case "trigger_hotkey":
+				if hotkey, ok := config["hotkey"].(string); ok && hotkey != "" {
+					tm.RegisterHotkey(flowID, hotkey)
+				}
 			}
 		}
 	}

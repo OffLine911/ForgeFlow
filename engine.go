@@ -150,18 +150,24 @@ func (e *Engine) executeFlow(ctx context.Context, flow *Flow, execution *FlowExe
 		}
 	}
 
+	executed := make(map[string]bool)
 	for _, nodeID := range startNodes {
 		if ctx.Err() != nil {
 			return
 		}
-		e.executeNode(ctx, nodeMap[nodeID], execution, nodeMap, adjacency)
+		e.executeNode(ctx, nodeMap[nodeID], execution, nodeMap, adjacency, executed)
 	}
 }
 
-func (e *Engine) executeNode(ctx context.Context, node *FlowNode, execution *FlowExecution, nodeMap map[string]*FlowNode, adjacency map[string][]string) {
+func (e *Engine) executeNode(ctx context.Context, node *FlowNode, execution *FlowExecution, nodeMap map[string]*FlowNode, adjacency map[string][]string, executed map[string]bool) {
 	if ctx.Err() != nil {
 		return
 	}
+
+	if executed[node.ID] {
+		return
+	}
+	executed[node.ID] = true
 
 	start := time.Now()
 	result := ExecutionResult{
@@ -186,7 +192,7 @@ func (e *Engine) executeNode(ctx context.Context, node *FlowNode, execution *Flo
 
 	for _, nextID := range adjacency[node.ID] {
 		if nextNode, ok := nodeMap[nextID]; ok {
-			e.executeNode(ctx, nextNode, execution, nodeMap, adjacency)
+			e.executeNode(ctx, nextNode, execution, nodeMap, adjacency, executed)
 		}
 	}
 }
